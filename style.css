@@ -1,0 +1,719 @@
+/* fonts */
+@font-face {
+  font-family: 'Ultra';
+  src: url('fonts/Ultra.otf') format('opentype');
+}
+
+@font-face {
+  font-family: 'Nasalization';
+  src: url('fonts/nasalization-rg.otf') format('opentype');
+}
+
+@font-face {
+  font-family: 'Distgrg';
+  src: url('fonts/DISTGRG_.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Adventurer';
+  src: url('fonts/AdventurerDemoRegular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Chivomono';
+  src: url('fonts/ChivoMono-VariableFont_wght.ttf') format('truetype');
+}
+
+
+@font-face {
+  font-family: 'FoundationOne';
+  src: url('fonts/FoundationOne.ttf') format('truetype');
+}
+
+
+@font-face {
+  font-family: 'NaumanGothicCoding';
+  src: url('fonts/NanumGothicCoding-Regular.ttf') format('truetype');
+}
+
+
+@font-face {
+  font-family: 'ProstoOne';
+  src: url('fonts/ProstoOne-Regular.ttf') format('truetype');
+}
+
+
+@font-face {
+  font-family: 'Saucer';
+  src: url('fonts/SaucerBB.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'YonderBreaks';
+  src: url('fonts/YonderBreaksDemoRegular.ttf') format('truetype');
+}
+
+
+
+
+
+
+
+
+html {
+  scroll-behavior: smooth;
+}
+
+
+
+
+
+
+
+
+
+
+canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+section {
+  display: flex;
+  align-items: center;
+  height: 100vh;
+  position: relative;
+  font-family: 'Cabin', sans-serif;
+  color: #ffffff;
+  padding-left: 10%;
+  padding-right: 10%;
+  /* padding-bottom: 20%; */
+}
+
+
+/* name section */
+
+
+.me_wrapper {
+  position: absolute;
+  top: 8%;
+  left: 2%;
+  display: flex;
+  flex-direction: column;
+  margin: 20px;
+}
+
+ul {
+  position: relative;
+  display: flex;
+}
+
+li {
+  list-style: none;
+}
+
+label {
+  position: relative;
+}
+
+input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 80px;
+  width: 80px;
+  z-index: 100;
+}
+
+.letters {
+  position: relative;
+  height: 80px;
+  width: 80px;
+  background: #18191f00;
+  color: hsla(189, 100%, 88%, 0.637);
+  display: flex;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  font-size: 7em;
+  font-family: 'Saucer', sans-serif;
+  padding: 20px;
+  margin: 0 4px;
+  border-radius: 20px;
+  box-shadow: -1px -1px 4px rgba(255, 255, 255, 0),
+    4px 4px 6px rgba(0, 0, 0, 0),
+    inset -1px -1px 4px rgba(255, 255, 255, 0),
+    inset 1px 1px 1px rgba(0, 0, 0, 0);
+}
+
+input[type="checkbox"]:checked~div {
+  box-shadow: inset 0 0 2px rgba(255, 255, 255, 0),
+    inset 4px 4px 6px rgba(0, 0, 0, 0);
+  color: yellow;
+  text-shadow: 0 0 15px yellow, 0 0 25px yellow;
+  animation: glow 1.5s linear infinite;
+}
+
+@keyframes glow {
+  0% {
+    filter: hue-rotate(0deg);
+  }
+
+  100% {
+    filter: hue-rotate(360deg);
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* about me section */
+#about {
+  padding-left: 25%;
+  padding-right: 5%;
+}
+
+#abt {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 3%;
+  left: 45%;
+}
+
+.question {
+  font-size: 3.2em;
+}
+
+.question>h1 {
+  padding: 0px;
+  margin: 0px;
+  transition: 0.5s;
+  text-align: left;
+  color: white;
+  font-family: 'Chivomono', sans-serif;
+}
+
+.akshar {
+  color: rgba(227, 176, 56, 0.838);
+  -webkit-text-stroke: 0px black;
+}
+
+.question>h1:hover {
+  -webkit-text-stroke: 1px hsla(41, 100%, 50%, 0.616);
+  color: rgba(0, 0, 0, 0);
+}
+
+
+
+
+
+.whois {
+  padding: 3px;
+  margin: 5px;
+  font-size: 1.2em;
+  transition: transform 2s;
+  text-align: left;
+  color: rgba(189, 189, 189, 0.696);
+  font-family: 'NaumanGothicCoding', sans-serif;
+}
+
+.whois:hover {
+  transform: scale(1.2);
+  color: rgba(227, 176, 56, 0.838);
+}
+
+.Axr {
+  color: rgba(227, 176, 56, 0.838);
+  transition: transform 2s;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* skills section */
+#skills {
+  display: block;
+  padding-left: 10%;
+  padding-right: 10%;
+}
+
+.myskills {
+  padding-top: 5%;
+  padding-left: 5%;
+  padding-bottom: 0%;
+}
+
+.myskills>h1 {
+  font-family: 'Nasalization', sans-serif;
+  transition: 0.5s;
+  text-align: left;
+  font-size: 4em;
+  margin: 2%;
+  color: #d403f9b4;
+}
+
+.myskills>h1:hover {
+  -webkit-text-stroke: 2px #ab03f9c6;
+  color: rgba(0, 0, 0, 0);
+}
+
+.skills_wrapper {
+  display: flex;
+  justify-content: space-around;
+  padding: 0px;
+  align-items: flex-start;
+}
+
+.gd {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: fit-content;
+}
+
+.dsml {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: fit-content;
+}
+
+.wd {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: fit-content;
+}
+
+.skills_heading {
+  font-size: 1.5em;
+  border-bottom: 2px solid #ffffff;
+  padding-bottom: 10px;
+  transition: transform 0.5s;
+  color: rgba(212, 212, 212, 0.801);
+  font-family: 'NaumanGothicCoding', sans-serif;
+}
+
+.skills_heading:hover {
+  transform: scale(1.25);
+  color: #ab03f9c6;
+}
+
+.image_wrapper {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  justify-content: center;
+  align-items: center;
+  grid-gap: 2em;
+  grid-auto-rows: auto;
+  padding: 20px;
+}
+
+.image_wrapper:hover {
+  border-radius: 15px;
+  backdrop-filter: blur(8px);
+  background-color: #54068f26;
+}
+
+.image_wrapper>img {
+  transition: transform 0.5s;
+}
+
+.image_wrapper>img:hover {
+  transform: scale(1.75);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Projects Section */
+
+
+/* Carousel Container */
+.carousel-container {
+  position: relative;
+  max-width: 1000px;
+  /* Increased width for larger project windows */
+  margin: 0 auto;
+  overflow: hidden;
+  padding: 20px;
+  /* Add padding to prevent overlap */
+}
+
+/* Carousel Slides */
+.carousel-slides {
+  display: flex;
+  transition: transform 0.5s ease-in-out;
+}
+
+/* Individual Project Card */
+.cards {
+  min-width: 100%;
+  box-sizing: border-box;
+  padding: 40px;
+  /* Increased padding for larger project windows */
+  text-align: center;
+  display: none;
+  /* Hide all slides by default */
+  background-color: #06568f26;
+  /* Background color for better visibility */
+  border-radius: 15px;
+  /* Rounded corners */
+  border: 2px solid hsla(176, 92%, 52%, 0.664);
+  /* Border for active card */
+  backdrop-filter: blur(8px);
+  /* Blur effect */
+}
+
+.cards.active {
+  display: block;
+  /* Show the active slide */
+}
+
+/* Project Image */
+.carousel-slides {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.project-image {
+  width: 100%;
+  /* Takes 100% of the parent container's width */
+  height: auto;
+  /* Maintains aspect ratio */
+  max-width: 600px;
+  /* Optional: Limits maximum size */
+}
+
+.project-image-vertical {
+  width: auto;
+  /* Takes 100% of the parent container's width */
+  height: 100%;
+  /* Maintains aspect ratio */
+  max-height: 400px;
+  /* Optional: Limits maximum size */
+}
+
+/* Navigation Buttons */
+.carousel-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  padding: 15px;
+  cursor: pointer;
+  border-radius: 50%;
+  font-size: 24px;
+  z-index: 10;
+  transition: background-color 0.3s ease;
+}
+
+.carousel-button.prev {
+  left: -15px;
+  /* Adjusted to be inside the container */
+}
+
+.carousel-button.next {
+  right: -15px;
+  /* Adjusted to be inside the container */
+}
+
+/* Hover Effects for Buttons */
+.carousel-button:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* Existing Styles (No Changes Needed) */
+#projects {
+  margin-top: 5%;
+  padding-left: 25%;
+  padding-right: 5%;
+  align-items: flex-start;
+}
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.heading {
+  height: fit-content;
+}
+
+.heading>h1 {
+  font-family: 'Nasalization', sans-serif;
+  transition: 0.5s;
+  text-align: right;
+  font-size: 4em;
+  margin: 2%;
+  color: hsla(176, 92%, 52%, 0.659);
+}
+
+.heading>h1:hover {
+  -webkit-text-stroke: 1px #1affab99;
+  color: rgba(0, 0, 0, 0);
+}
+
+/* Existing Card Styles (No Changes Needed) */
+.cards:hover {
+  transform: scale(1.05);
+  border: 2px solid hsla(176, 92%, 52%, 0.664);
+  border-radius: 15px;
+  backdrop-filter: blur(8px);
+  background-color: #06568f26;
+}
+
+.topic {
+  justify-content: stretch;
+  align-items: stretch;
+  padding-bottom: 10px;
+  text-align: center;
+  border-bottom: 2px solid white;
+  font-family: 'Chivomono', sans-serif;
+  color: rgb(237, 237, 237);
+}
+
+.topic>a:link,
+.topic>a:visited,
+.topic>a:active {
+  color: rgb(237, 237, 237);
+  text-decoration: none;
+  background-color: transparent;
+}
+
+.topic>a:hover {
+  color: hsla(176, 92%, 52%, 0.664);
+  text-decoration: underline;
+  background-color: transparent;
+}
+
+.content {
+  justify-content: center;
+  align-items: flex-start;
+  padding: 10px;
+  text-align: justify;
+  color: rgb(212, 212, 212);
+  font-family: 'NaumanGothicCoding', sans-serif;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* contact me section */
+.contact_heading {
+  position: absolute;
+  top: 10%;
+  width: fit-content;
+}
+
+.contact_heading>h1 {
+  font-family: 'Nasalization', sans-serif;
+  transition: 0.5s;
+  text-align: left;
+  font-size: 3em;
+  color: hsla(23, 63%, 51%, 0.607);
+  margin: 2%
+}
+
+.contact_heading>h1:hover {
+  -webkit-text-stroke: 2px hsla(11, 99%, 53%, 0.664);
+  color: rgba(0, 0, 0, 0);
+}
+
+.contact_form>form {
+  display: flex;
+  flex-direction: column;
+  height: 2em;
+  width: 100%;
+  font-size: 1.5em;
+  border-radius: 25px;
+  background-color: #9180001c;
+  backdrop-filter: blur(8px);
+  padding: 20px;
+  height: fit-content;
+  width: fit-content;
+  transition: transform(1s);
+  justify-content: flex-start;
+  align-items: flex-start;
+  border: 2px solid white;
+  color: rgb(255, 255, 255);
+  font-family: 'NaumanGothicCoding', sans-serif;
+}
+
+
+.contact_form>form:hover {
+  transform: scale(1.1);
+  border: 2px solid hsla(24, 82%, 40%, 0.664);
+  border-radius: 25px;
+}
+
+
+.input {
+  margin: 5px;
+  text-align: left;
+  color: white;
+  align-items: flex-start;
+  background-color: #36040034;
+  backdrop-filter: blur(10px);
+  border-radius: 5px;
+}
+
+.input::placeholder {
+  color: rgba(254, 254, 254, 0.345);
+}
+
+#submit {
+  background-color: #ffffffbd;
+  border: 2px solid black;
+  border-radius: 8px;
+  padding: 5px;
+}
+
+/* Footer css */
+/* Sticky Footer Styles */
+footer {
+  background-color: rgba(0, 43, 43, 0.8);
+  /* Dark cyan with transparency */
+  color: white;
+  /* Light text */
+  padding: 15px 20px;
+  /* Padding for spacing */
+  text-align: center;
+  font-family: Arial, sans-serif;
+  position: fixed;
+  /* Fix the footer to the bottom */
+  bottom: 20px;
+  /* Position from the bottom */
+  right: 20px;
+  /* Position from the right */
+  width: auto;
+  /* Auto width to fit content */
+  max-width: 300px;
+  /* Maximum width to prevent it from getting too wide */
+  border-radius: 10px;
+  /* Rounded corners */
+  z-index: 1000;
+  /* Ensure it stays above other content */
+  backdrop-filter: blur(5px);
+  /* Adds a blur effect to the background */
+  border: 2px solid hsla(176, 92%, 52%, 0.5);
+  /* Border with a cyan shade */
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.footer-links {
+  margin-bottom: 10px;
+  /* Reduced margin for a compact look */
+}
+
+.footer-links a {
+  display: inline-block;
+  margin: 0 10px;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.footer-links a:hover {
+  transform: translateY(-3px);
+  /* Slight lift on hover */
+  opacity: 0.8;
+  /* Slight fade on hover */
+}
+
+.footer-links img {
+  vertical-align: middle;
+}
+
+.footer-info {
+  font-size: 14px;
+  opacity: 0.8;
+  /* Slightly faded text */
+}
+
+.footer-info p {
+  margin: 5px 0;
+}
