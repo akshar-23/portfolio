@@ -2,10 +2,6 @@
 <html lang="en">
 
 <head>
-    <!--
-     - Roxy: Bootstrap template by GettTemplates.com
-     - https://gettemplates.co/roxy
-    -->
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Akshar Vandara</title>
@@ -28,10 +24,13 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css"
         integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
 
-    <!-- Modernizr JS for IE8 support of HTML5 elements and media queries -->
+    <!-- Modernizr JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.js"></script>
 
+    <!-- ✅ Move jQuery to the top -->
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 </head>
+
 
 <body data-spy="scroll" data-target="#navbar" class="static-layout">
     <nav id="header-navbar" class="navbar navbar-expand-lg py-4">
@@ -730,10 +729,12 @@
                                 <img class="img-responsive" src="img/icons/pandas.svg" alt=" " title="Pandas Lib">
                             </div>
                             <div class="client-item">
-                                <img class="img-responsive" src="img/icons/matplotlib.svg" alt=" " title="Matplotlib Lib">
+                                <img class="img-responsive" src="img/icons/matplotlib.svg" alt=" "
+                                    title="Matplotlib Lib">
                             </div>
                             <div class="client-item">
-                                <img class="img-responsive" src="img/icons/scikitlearn.svg" alt=" " title="Scikitlearn Lib">
+                                <img class="img-responsive" src="img/icons/scikitlearn.svg" alt=" "
+                                    title="Scikitlearn Lib">
                             </div>
                             <div class="client-item">
                                 <img class="img-responsive" src="img/icons/seaborn.svg" alt=" " title="Seaborn Lib">
@@ -865,20 +866,25 @@
             </div>
         </div>
     </footer> <!-- External JS -->
-    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.js"></script>
+    <!-- ✅ Make sure jQuery is loaded first -->
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <!-- ✅ Now load Bootstrap -->
     <script src="vendor/bootstrap/popper.min.js"></script>
     <script src="vendor/bootstrap/bootstrap.min.js"></script>
-    <script src="vendor/select2/select2.min.js "></script>
+
+    <!-- ✅ Load other plugins after jQuery -->
+    <script src="vendor/select2/select2.min.js"></script>
     <script src="vendor/owlcarousel/owl.carousel.min.js"></script>
-    <script src="vendor/stellar/jquery.stellar.js" type="text/javascript" charset="utf-8"></script>
+    <script src="vendor/stellar/jquery.stellar.js"></script>
     <script src="vendor/isotope/isotope.min.js"></script>
     <script src="vendor/lightcase/lightcase.js"></script>
     <script src="vendor/waypoints/waypoint.min.js"></script>
     <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
 
-    <!-- Main JS -->
-    <script src="js/app.min.js "></script>
-    <script src="//localhost:35729/livereload.js"></script>
+    <!-- ✅ Finally, load your main JS -->
+    <script src="js/app.min.js"></script>
+
 </body>
 
 </html>
