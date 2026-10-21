@@ -12,11 +12,11 @@ export const FONT = {
 };
 
 export const BACKGROUND = '#080a14';
-export const RAIN_HEAD = '#d4ffec';
-export const DUST = '#2c3350';
+export const RAIN_HEAD = '#dce8ff';
+export const DUST = '#262d48';
 
 // How strong the matrix rain is in empty space (0 - 1).
-export const RAIN_STRENGTH = 0.7;
+export const RAIN_STRENGTH = 0.55;
 
 // How strong the sun rays are (0 - 1).
 export const RAY_STRENGTH = 0.75;
@@ -69,7 +69,7 @@ export const GLYPH_SETS = [
   {
     name: 'void',
     bands: chunk(RAIN_GLYPHS, SLOTS),
-    dark: '#0c332c', bright: '#3fb08c',
+    dark: '#141d36', bright: '#6f86b8',
     jitter: 0, scramble: 0, gamma: 1, grain: 0.3,
   },
   {

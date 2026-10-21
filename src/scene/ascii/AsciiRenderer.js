@@ -144,10 +144,10 @@ const fragmentShader = /* glsl */ `
     vec2 r = vec2(0.0);
     for (int k = 0; k < 2; k++) {
       float s = cell.x * 1.618 + float(k) * 71.3;
-      if (hash11(s) > 0.5) continue;
-      float speed = mix(4.0, 13.0, hash11(s + 1.1));
-      float len = mix(6.0, 26.0, hash11(s + 2.2));
-      float period = uGrid.y + len + mix(10.0, 60.0, hash11(s + 3.3));
+      if (hash11(s) > 0.09) continue;
+      float speed = mix(3.0, 9.0, hash11(s + 1.1));
+      float len = mix(4.0, 16.0, hash11(s + 2.2));
+      float period = uGrid.y + len + mix(30.0, 120.0, hash11(s + 3.3));
       float head = mod(uRainTime * speed + hash11(s + 4.4) * period, period);
       float d = head - row;
       if (d >= 0.0 && d < len) {
@@ -190,6 +190,16 @@ const fragmentShader = /* glsl */ `
     float h = hash12(cell);
     float h2 = hash12(cell + 19.19);
 
+    // a solid object next to empty space is on its outline
+    ivec2 ci = ivec2(cell);
+    ivec2 last = ivec2(uGrid) * 2 - 1;
+    float neighbor = min(
+      min(setAt(uScene, clamp((ci + ivec2(-1, 0)) * 2 + ivec2(1, 0), ivec2(0), last)),
+          setAt(uScene, clamp((ci + ivec2(1, 0)) * 2, ivec2(0), last))),
+      min(setAt(uScene, clamp((ci + ivec2(0, -1)) * 2 + ivec2(0, 1), ivec2(0), last)),
+          setAt(uScene, clamp((ci + ivec2(0, 1)) * 2, ivec2(0), last))));
+    bool outline = id >= float(FIRST_SOLID) && neighbor < float(FIRST_SOLID);
+
     // the cursor works like a lantern
     vec2 center = (cell + 0.5) * uCell - uOffset;
     float md = length(center - uMouse) / (uCell.y * 9.0);
@@ -224,7 +234,7 @@ const fragmentShader = /* glsl */ `
       bool rayHere = ray > 0.05 && lane * 0.6 + h2 * 0.4 < ray * 1.1;
 
       float level = clamp(trail * (1.0 + lantern * 1.2) * uReveal, 0.0, 1.0);
-      if (level > 0.02 && level >= ray * 0.7) {
+      if (level > 0.02 && level >= ray * 1.5) {
         ink = glyph(SET_VOID, int(hs * float(BANDS * SLOTS)), ff);
         color = mix(uDark[SET_VOID], uBright[SET_VOID], level) * smoothstep(0.0, 0.4, level);
         color = mix(color, uHead, head * uReveal * 0.85);
@@ -257,6 +267,7 @@ const fragmentShader = /* glsl */ `
       bool point = set == SET_STAR;
       float L = pow(clamp(point ? lumMax : lum, 0.0, 1.0), prm.z) * (point ? 1.0 : mix(0.6, 1.0, cov));
       if (accent > 0.25) L = max(L, 0.7);
+      if (outline) L = max(L, 0.45);
       if (set < FIRST_SOLID) L += ray * 0.35; // clouds and galaxies catch the sunlight
       L = clamp(L + trail * 0.12 + head * 0.35 + lantern * 0.22, 0.0, 1.0);
 

@@ -109,7 +109,7 @@ const fragmentShader = /* glsl */ `
     // sun + a soft light from the camera, so every face we look at has some shape
     float key = smoothstep(-0.15, 1.0, dot(n, l));
     float facing = max(dot(n, v), 0.0);
-    float diff = key * 0.65 + facing * 0.45 + max(dot(n, uFillDir), 0.0) * 0.15;
+    float diff = key * 0.6 + facing * 0.55 + max(dot(n, uFillDir), 0.0) * 0.15;
     float rim = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0) * uRim;
     float spec = pow(max(dot(n, normalize(l + v)), 0.0), 32.0) * uSpec;
 
@@ -133,6 +133,9 @@ const fragmentShader = /* glsl */ `
 
     float glow = uGlow * (1.0 - uFlicker * 0.45 * vnoise(vec3(vObjPos.xy * 3.0, uTime * 18.0)));
     float lum = albedo * (uAmbient + (1.0 - uAmbient) * diff) + rim + spec + glow;
+    // far objects only get a few cells, so lift their midtones to keep them readable
+    float far = smoothstep(50.0, 300.0, length(vViewPos));
+    lum = mix(lum, sqrt(max(lum, 0.0)), far * 0.6);
 
     // sparse speckles that the ASCII pass draws as orange '@' or white 'o' glyphs
     float accent = 0.0;
@@ -149,7 +152,7 @@ const fragmentShader = /* glsl */ `
 export function createAsciiMaterial({
   set = SET.MOON,
   albedo = 1,
-  ambient = 0.04,
+  ambient = 0.08,
   rim = 0,
   spec = 0,
   noise = 0,
