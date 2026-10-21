@@ -1,56 +1,56 @@
 /* fonts */
 @font-face {
   font-family: 'Ultra';
-  src: url('fonts/Ultra.otf') format('opentype');
+  src: url('../fonts/Ultra.otf') format('opentype');
 }
 
 @font-face {
   font-family: 'Nasalization';
-  src: url('fonts/nasalization-rg.otf') format('opentype');
+  src: url('../fonts/nasalization-rg.otf') format('opentype');
 }
 
 @font-face {
   font-family: 'Distgrg';
-  src: url('fonts/DISTGRG_.ttf') format('truetype');
+  src: url('../fonts/DISTGRG_.ttf') format('truetype');
 }
 
 @font-face {
   font-family: 'Adventurer';
-  src: url('fonts/AdventurerDemoRegular.ttf') format('truetype');
+  src: url('../fonts/AdventurerDemoRegular.ttf') format('truetype');
 }
 
 @font-face {
   font-family: 'Chivomono';
-  src: url('fonts/ChivoMono-VariableFont_wght.ttf') format('truetype');
+  src: url('../fonts/ChivoMono-VariableFont_wght.ttf') format('truetype');
 }
 
 
 @font-face {
   font-family: 'FoundationOne';
-  src: url('fonts/FoundationOne.ttf') format('truetype');
+  src: url('../fonts/FoundationOne.ttf') format('truetype');
 }
 
 
 @font-face {
   font-family: 'NaumanGothicCoding';
-  src: url('fonts/NanumGothicCoding-Regular.ttf') format('truetype');
+  src: url('../fonts/NanumGothicCoding-Regular.ttf') format('truetype');
 }
 
 
 @font-face {
   font-family: 'ProstoOne';
-  src: url('fonts/ProstoOne-Regular.ttf') format('truetype');
+  src: url('../fonts/ProstoOne-Regular.ttf') format('truetype');
 }
 
 
 @font-face {
   font-family: 'Saucer';
-  src: url('fonts/SaucerBB.ttf') format('truetype');
+  src: url('../fonts/SaucerBB.ttf') format('truetype');
 }
 
 @font-face {
   font-family: 'YonderBreaks';
-  src: url('fonts/YonderBreaksDemoRegular.ttf') format('truetype');
+  src: url('../fonts/YonderBreaksDemoRegular.ttf') format('truetype');
 }
 
 
@@ -62,6 +62,7 @@
 
 html {
   scroll-behavior: smooth;
+  background-color: #080a14;
 }
 
 
