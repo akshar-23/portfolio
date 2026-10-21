@@ -60,24 +60,45 @@ export function useJourney() {
 
 // Wheel, touch and keyboard input. One gesture moves one step: after a move, input is
 // ignored until the transition is done and the trackpad's momentum has died down.
+// Content that doesn't fit its screen sits in a [data-scroll] box: it scrolls first,
+// and the next gesture past its end moves on.
+const SECTION_GAP = 900;
+const STEP_GAP = 450;
+
+function scroller(target) {
+  return target instanceof Element ? target.closest('[data-scroll]') : null;
+}
+
+// can this box still scroll that way?
+function canScroll(box, down) {
+  if (!box || box.scrollHeight <= box.clientHeight + 1) return false;
+  return down ? box.scrollTop + box.clientHeight < box.scrollHeight - 1 : box.scrollTop > 0;
+}
+
 export function attachInput(target = window) {
-  const MIN_GAP = 900;
   let lockedUntil = 0;
   let lastWheel = 0;
   let wheelSum = 0;
-  let touchY = null;
+  let touch = null;
 
   const move = (forward) => {
+    const before = state.index;
     const moved = forward ? journey.next() : journey.prev();
-    if (moved) lockedUntil = performance.now() + MIN_GAP;
+    if (moved) lockedUntil = performance.now() + (state.index === before ? STEP_GAP : SECTION_GAP);
   };
 
   const onWheel = (event) => {
     if (locked || event.ctrlKey) return;
-    event.preventDefault();
     const now = performance.now();
     const streaming = now - lastWheel < 150;
     lastWheel = now;
+    if (canScroll(scroller(event.target), event.deltaY > 0)) {
+      // let the box scroll, and don't let its momentum spill into a move
+      lockedUntil = Math.max(lockedUntil, now + 250);
+      wheelSum = 0;
+      return;
+    }
+    event.preventDefault();
     if (now < lockedUntil) {
       // momentum keeps sending events after the fingers stop: wait for a pause
       if (streaming) lockedUntil = Math.max(lockedUntil, now + 150);
@@ -85,7 +106,7 @@ export function attachInput(target = window) {
       return;
     }
     wheelSum += event.deltaY;
-    if (Math.abs(wheelSum) > 30) {
+    if (Math.abs(wheelSum) > 24) {
       move(wheelSum > 0);
       wheelSum = 0;
     }
@@ -100,20 +121,24 @@ export function attachInput(target = window) {
     else if (forward || back) {
       event.preventDefault();
       if (performance.now() >= lockedUntil) move(forward);
-    } else return;
+    }
   };
 
   const onTouchStart = (event) => {
-    touchY = event.touches[0].clientY;
+    const box = scroller(event.target);
+    touch = { y: event.touches[0].clientY, box, top: box?.scrollTop ?? 0 };
   };
   const onTouchMove = (event) => {
-    if (!locked) event.preventDefault();
+    if (locked || !touch) return;
+    const down = touch.y > event.touches[0].clientY;
+    if (!canScroll(touch.box, down)) event.preventDefault();
   };
   const onTouchEnd = (event) => {
-    if (locked || touchY === null) return;
-    const dy = touchY - event.changedTouches[0].clientY;
-    touchY = null;
-    if (Math.abs(dy) > 50 && performance.now() >= lockedUntil) move(dy > 0);
+    if (locked || !touch) return;
+    const dy = touch.y - event.changedTouches[0].clientY;
+    const scrolled = touch.box && touch.box.scrollTop !== touch.top;
+    touch = null;
+    if (!scrolled && Math.abs(dy) > 50 && performance.now() >= lockedUntil) move(dy > 0);
   };
 
   target.addEventListener('wheel', onWheel, { passive: false });

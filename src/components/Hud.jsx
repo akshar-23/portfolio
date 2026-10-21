@@ -40,7 +40,7 @@ function Telemetry({ index }) {
         <span className="telemetry__waypoint">
           wpt <i>{pad(index)}</i>/{pad(sections.length - 1)} · {sections[index].label}
         </span>
-        <span ref={status}>holding</span>
+        <span className="telemetry__status" ref={status}>holding</span>
       </div>
     </div>
   );

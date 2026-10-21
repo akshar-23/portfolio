@@ -1,6 +1,8 @@
-import { useJourney } from '../journey.js';
+import { journey, useJourney } from '../journey.js';
 import { sections } from '../content/site.js';
 import { ScrambleText } from './ScrambleText.jsx';
+
+export const pad = (n) => String(n).padStart(2, '0');
 
 // One screen of the page and a waypoint on the ship's route. Only the active one is
 // shown; the rest are inert so keyboard focus can't wander into them.
@@ -28,21 +30,31 @@ export function useActive(id) {
   return { active, step: active ? step : 0 };
 }
 
-export function Section({ id, title, align = 'left', wide = false, children }) {
+// WPT 02 / 06 over a scrambling title
+export function SectionHead({ id, title, className = '' }) {
   const index = sections.findIndex((s) => s.id === id);
   const { active } = useActive(id);
   return (
-    <Screen id={id} className={`section--${align}${wide ? ' section--wide' : ''}`}>
-      <div className="section__inner">
-        <div className="section__content">
-          <header className="section-head reveal">
-            <span className="section-head__index">// {String(index).padStart(2, '0')}</span>
-            <ScrambleText as="h2" className="section-head__title" text={title} play={active} />
-            <span className="section-head__rule" aria-hidden="true" />
-          </header>
-          {children}
-        </div>
-      </div>
-    </Screen>
+    <header className={`head reveal ${className}`}>
+      <span className="head__index">wpt {pad(index)} / {pad(sections.length - 1)}</span>
+      <ScrambleText as="h2" className="head__title" text={title} play={active} />
+    </header>
+  );
+}
+
+// a numbered list of the steps in a section; the current one is lit
+export function StepLog({ id, items, step }) {
+  return (
+    <ol className="log reveal" style={{ '--i': 1 }}>
+      {items.map((item, i) => (
+        <li key={item.key}>
+          <button className="log__item" aria-current={i === step ? 'step' : undefined} onClick={() => journey.goTo(id, i)}>
+            <span className="log__index">{pad(i + 1)}</span>
+            <span className="log__name">{item.name}</span>
+            <span className="log__meta">{item.meta}</span>
+          </button>
+        </li>
+      ))}
+    </ol>
   );
 }

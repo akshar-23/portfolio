@@ -13,6 +13,7 @@ import { createGalaxy } from './world/galaxy.js';
 import { createNebula } from './world/nebula.js';
 import { journey } from '../journey.js';
 import { telemetry } from './telemetry.js';
+import { layout, measureLayout } from './layout.js';
 
 // One station per page section (sections in content/site.js, in order): the ship flies
 // to a section's station when that section comes up.
@@ -78,12 +79,13 @@ function buildWorld(scene, flight) {
     place(2, 21, 2, 42), [0.1, 0, 0.1]);
   moonlet.add(createTorusRing(9.5, 0.8, { set: SET.EMBER, ambient: 0.15, noise: 0.6, noiseScale: 1.2 }));
 
-  // research: content on the right, the gas giant on the left
-  const giant = createGasGiant(36);
+  // research: papers on both sides, the gas giant in the middle
+  const giant = createGasGiant(30);
   const view3 = flight.views[3];
-  const ringAxis = view3.up.clone().addScaledVector(view3.forward, -0.5).addScaledVector(view3.right, 0.25).normalize();
+  const ringAxis = view3.up.clone().addScaledVector(view3.forward, -0.42).addScaledVector(view3.right, 0.12).normalize();
   giant.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), ringAxis);
-  add(giant.group, place(3, -58, 4, 150));
+  // high enough that the route to projects passes well under it and its rings
+  add(giant.group, place(3, -20, 48, 210));
   spinning.push([giant.body, [0, 0.05, 0]]);
 
   const iceMoon = createPlanet(4, { set: SET.ICE, noise: 0.6, noiseScale: 0.6, craters: 0.6 });
@@ -95,23 +97,23 @@ function buildWorld(scene, flight) {
   scene.add(asteroids.mesh);
   updates.push((time) => asteroids.update(time));
 
-  // projects: the grid covers the middle, so things sit around the edges
-  const station = createStation(0.8);
-  add(station.group, place(4, -32, 15, 60));
+  // projects: text on the left, the feed on the right, the station between them
+  const station = createStation(0.7);
+  add(station.group, place(4, 2, 14, 60));
   station.group.lookAt(flight.views[4].position);
   station.group.rotateY(1.0);
   station.group.rotateX(0.35);
   updates.push((time) => station.update(time));
 
   const ember = add(createPlanet(5, { set: SET.EMBER, noise: 0.7, noiseScale: 0.6, rim: 0.2 }),
-    place(4, 36, 14, 80), [0, 0.15, 0]);
+    place(4, 30, 36, 110), [0, 0.15, 0]);
   const emberRing = createTorusRing(7, 0.75, { set: SET.TEAL, ambient: 0.2, noise: 0.4, noiseScale: 1 });
   emberRing.rotation.x = Math.PI * 0.4;
   add(emberRing, ember.position, [0, 0, -0.15]);
 
-  // skills: content on the left, an ice world and a passing comet on the right
+  // skills: columns at both edges, an ice world between them and a passing comet
   add(createPlanet(8, { set: SET.ICE, albedo: 1.1, noise: 0.6, noiseScale: 0.35, craters: 0.8, rim: 0.2 }),
-    place(5, 24, 3, 45), [0.05, 0.08, 0]);
+    place(5, 0, 10, 48), [0.05, 0.08, 0]);
   const comet = createComet({ from: place(5, -40, 60, 200), to: place(5, 190, 10, 160), period: 45 });
   scene.add(comet.group);
   updates.push((time) => comet.update(time, sun.position, flight.res));
@@ -212,13 +214,31 @@ export function startScene(canvas) {
   const tween = { from: journeyState.progress, to: journeyState.progress, start: 0, duration: 1 };
   const easeInOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2);
   let clock = 0;
+  // each flight swerves out to one side and back (alternating), so it isn't a straight line
+  let weaveSide = 1;
   journey.subscribe(() => {
     tween.from = journeyState.progress;
     tween.to = journey.progress();
     tween.start = clock;
     const sections = Math.abs(tween.to - tween.from) * (flight.stations - 1);
     tween.duration = 1.15 + Math.sqrt(sections) * 0.45;
+    weaveSide = -weaveSide;
   });
+
+  // where the content is: measured after React has drawn the new section, and again once
+  // it has settled in
+  function relayout() {
+    measureLayout();
+    ascii.setBlocks(layout.blocks);
+  }
+  journey.subscribe(() => {
+    ascii.setBlocks([]);
+    requestAnimationFrame(() => requestAnimationFrame(relayout));
+    setTimeout(relayout, 900);
+  });
+  window.addEventListener('resize', () => requestAnimationFrame(relayout));
+  document.fonts?.ready.then(relayout);
+  setTimeout(relayout, 300);
 
   // lighting a letter of the name sends a ripple through the glyphs
   window.addEventListener('ascii:pulse', (event) => ascii.pulse(event.detail.x, event.detail.y));
@@ -241,6 +261,9 @@ export function startScene(canvas) {
 
   const frame = {};
   const offset = new THREE.Vector2();
+  const target = new THREE.Vector2();
+  const onScreen = new THREE.Vector3();
+  let lateral = 0;
   const basis = new THREE.Matrix4();
   const backward = new THREE.Vector3();
   const rollAxis = new THREE.Vector3(0, 0, 1);
@@ -268,20 +291,38 @@ export function startScene(canvas) {
     const along = Math.min((time - tween.start) / tween.duration, 1);
     journeyState.progress = tween.from + (tween.to - tween.from) * easeInOut(along);
 
-    // the ship follows the route, drifts toward the cursor and banks into turns
+    // the ship follows the route, steers to the empty part of the screen, swerves
+    // during flights and banks into turns
     const { t, roll } = flight.sample(journeyState.progress);
     flight.frameAt(t, frame);
 
-    const swayFrom = offset.x;
-    offset.x += (cursor.x * 14 - offset.x) * ease;
-    offset.y += (-cursor.y * 6 - offset.y) * ease;
-    const sway = (offset.x - swayFrom) / Math.max(dt, 1e-3);
+    // where it should be on screen (ndc), nudged a little by the cursor
+    target.set(
+      (layout.free.x / window.innerWidth) * 2 - 1 + cursor.x * 0.12,
+      1 - (layout.free.y / window.innerHeight) * 2 - cursor.y * 0.1
+    );
+    // where it is on screen now: steer the offset until the two meet
+    onScreen.copy(frame.position)
+      .addScaledVector(frame.right, offset.x)
+      .addScaledVector(frame.up, offset.y)
+      .project(camera);
+    // (only once the camera is in place: before that the projection is meaningless)
+    if (started && Number.isFinite(onScreen.x) && Number.isFinite(onScreen.y) && onScreen.z < 1) {
+      const reach = 1 - Math.exp(-dt * 2.2);
+      offset.x = THREE.MathUtils.clamp(offset.x + (target.x - onScreen.x) * 16 * reach, -26, 26);
+      offset.y = THREE.MathUtils.clamp(offset.y + (target.y - onScreen.y) * 10 * reach, -6, 7);
+    }
+
+    const weave = Math.sin(Math.min(along, 1) * Math.PI) * 9 * weaveSide * Math.min(tween.duration - 1, 1);
+    const swayFrom = lateral;
+    lateral = offset.x + weave;
+    const sway = (lateral - swayFrom) / Math.max(dt, 1e-3);
     // banking needs speed: in the turns while flying, level when parked at a station
     const turn = -flight.turnAt(t) * 0.35 * warp - sway * 0.03;
     bank += (THREE.MathUtils.clamp(turn, -0.7, 0.7) - bank) * ease;
 
     shipRig.position.copy(frame.position)
-      .addScaledVector(frame.right, offset.x)
+      .addScaledVector(frame.right, lateral)
       .addScaledVector(frame.up, offset.y);
     basis.makeBasis(frame.right, frame.up, backward.copy(frame.forward).negate());
     shipRig.quaternion.setFromRotationMatrix(basis).multiply(rollQuat.setFromAxisAngle(rollAxis, bank + roll));
@@ -289,7 +330,7 @@ export function startScene(canvas) {
     // the chase camera lags a little, so it swings out in the turns, but it always
     // looks just ahead of the ship so the ship stays in frame
     chaseCamera(frame, chase, aim);
-    chase.addScaledVector(frame.up, -cursor.y).addScaledVector(frame.right, offset.x * 0.3 + cursor.x);
+    chase.addScaledVector(frame.up, -cursor.y).addScaledVector(frame.right, lateral * 0.2 + cursor.x);
     if (!started) {
       camera.position.copy(chase);
       lookAt.copy(aim);

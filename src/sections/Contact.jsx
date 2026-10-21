@@ -1,4 +1,4 @@
-import { Section } from '../components/Section.jsx';
+import { Screen, SectionHead } from '../components/Section.jsx';
 import { profile } from '../content/site.js';
 
 export function Contact() {
@@ -6,35 +6,36 @@ export function Contact() {
   const back = `${window.location.origin}${import.meta.env.BASE_URL}#contact`;
 
   return (
-    <Section id="contact" title="Contact" align="left">
-      <div className="panel reveal">
-        <p className="contact__lead">
-          Working on games, tools or research where this could fit? Send a message, I read everything.
+    <Screen id="contact" className="contact">
+      <div className="col" data-scroll data-block>
+        <SectionHead id="contact" title="Open a channel" />
+        <p className="contact__lead reveal" style={{ '--i': 1 }}>
+          Working on games, tools or research where this could fit? Send a transmission, I read everything.
         </p>
-        <a className="contact__email" href={`mailto:${profile.email}`}>{profile.email}</a>
+        <a className="contact__email reveal" style={{ '--i': 2 }} href={`mailto:${profile.email}`}>{profile.email}</a>
 
-        <form className="form" action="https://formsubmit.co/6ae7649013f806b5f13a504c48525a24" method="POST">
+        <form className="form reveal" style={{ '--i': 3 }} action="https://formsubmit.co/6ae7649013f806b5f13a504c48525a24" method="POST">
           <input type="hidden" name="_captcha" value="false" />
           <input type="hidden" name="_subject" value="New message from the portfolio" />
           <input type="hidden" name="_next" value={back} />
           <label className="field">
-            <span className="label">your email</span>
+            <span>from</span>
             <input type="email" name="email" placeholder="you@domain.com" required />
           </label>
           <label className="field">
-            <span className="label">message</span>
-            <textarea name="message" rows="5" placeholder="Let’s talk about…" required />
+            <span>message</span>
+            <textarea name="message" rows="3" placeholder="Let’s talk about…" required />
           </label>
-          <button className="button button--accent" type="submit">send message</button>
+          <button className="button button--accent" type="submit">transmit</button>
         </form>
 
-        <ul className="socials">
+        <ul className="socials reveal" style={{ '--i': 4 }}>
           {profile.links.filter((link) => link.url).map((link) => (
             <li key={link.label}><a href={link.url} target="_blank" rel="noreferrer">{link.label} ↗</a></li>
           ))}
           <li><a href={profile.resume} target="_blank" rel="noreferrer">Resume ↗</a></li>
         </ul>
       </div>
-    </Section>
+    </Screen>
   );
 }

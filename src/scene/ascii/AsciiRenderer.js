@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import fontUrl from '../../../fonts/ChivoMono-VariableFont_wght.ttf';
+import { MAX_BLOCKS } from '../layout.js';
 import {
   BACKGROUND, BANDS, CELL, DUST, FIRST_SOLID, FONT, GLYPH_SETS, RAIN_HEAD, RAIN_STRENGTH, RAY_STRENGTH, SET, SLOTS,
 } from './palette.js';
@@ -125,6 +126,21 @@ const fragmentShader = /* glsl */ `
   uniform vec3 uBright[NSETS];
   uniform vec4 uParams[NSETS]; // jitter, scramble, gamma, grain
   uniform vec4 uPulses[4]; // x, y (device px), start time, on
+  uniform vec4 uBlocks[${MAX_BLOCKS}]; // page content, device px: left, bottom, right, top
+  uniform int uBlockCount;
+  uniform float uCalm; // how much the glyphs under the content quiet down
+
+  // 1 under the page's content, fading out over a few cells around it
+  float underContent(vec2 p) {
+    float under = 0.0;
+    for (int i = 0; i < ${MAX_BLOCKS}; i++) {
+      if (i >= uBlockCount) break;
+      vec4 b = uBlocks[i];
+      vec2 d = max(max(b.xy - p, p - b.zw), 0.0);
+      under = max(under, 1.0 - smoothstep(0.0, uCell.y * 3.0, length(d)));
+    }
+    return under * uCalm;
+  }
 
   float glyph(int set, int index, vec2 f) {
     vec2 uv = vec2(
@@ -222,6 +238,13 @@ const fragmentShader = /* glsl */ `
     float head = drop.y * uRain;
     float ray = texelFetch(uRays, ivec2(cell), 0).r * uRayStrength * uReveal;
 
+    // under the page's content the scene steps back: less rain, softer rays, dimmer glyphs
+    float under = underContent(center);
+    trail *= 1.0 - under * 0.85;
+    head *= 1.0 - under;
+    ray *= 1.0 - under * 0.6;
+    lantern *= 1.0 - under * 0.7;
+
     vec3 color = vec3(0.0);
     float ink = 0.0;
     float bloom = 0.0;
@@ -300,6 +323,9 @@ const fragmentShader = /* glsl */ `
       }
     }
 
+    color *= 1.0 - under * (set == SET_SHIP ? 0.35 : 0.68);
+    bloom *= 1.0 - under * 0.8;
+
     // soft glow under bright glyphs, plus a warm haze where the sun shines
     float halo = bloom * 0.12 * (1.0 - smoothstep(0.0, 0.75, length(f - 0.5)));
     vec3 col = uBg + color * halo + uBright[SET_RAY] * ray * ray * 0.06;
@@ -376,7 +402,11 @@ export class AsciiRenderer {
       uBright: { value: GLYPH_SETS.map((s) => toVec3(s.bright)) },
       uParams: { value: GLYPH_SETS.map((s) => new THREE.Vector4(s.jitter, s.scramble, s.gamma, s.grain)) },
       uPulses: { value: Array.from({ length: 4 }, () => new THREE.Vector4()) },
+      uBlocks: { value: Array.from({ length: MAX_BLOCKS }, () => new THREE.Vector4()) },
+      uBlockCount: { value: 0 },
+      uCalm: { value: 0 },
     };
+    this.calmTarget = 0;
     this.nextPulse = 0;
 
     this.raysScene = createPass(this.raysUniforms, raysShader);
@@ -484,6 +514,21 @@ export class AsciiRenderer {
     this.uniforms.uMouse.value.set(-1e5, -1e5);
   }
 
+  // the page content's boxes (css px); the glyphs under them quiet down
+  setBlocks(blocks) {
+    const u = this.uniforms;
+    blocks.forEach((box, i) => {
+      u.uBlocks.value[i].set(
+        box.left * this.dpr,
+        this.size.y - box.bottom * this.dpr,
+        box.right * this.dpr,
+        this.size.y - box.top * this.dpr
+      );
+    });
+    u.uBlockCount.value = blocks.length;
+    this.calmTarget = blocks.length ? 1 : 0;
+  }
+
   // a ring of brighter, scrambling glyphs spreading out from x, y (css px)
   pulse(x, y) {
     const slot = this.uniforms.uPulses.value[this.nextPulse++ % 4];
@@ -515,6 +560,7 @@ export class AsciiRenderer {
     u.uTime.value = this.time;
     u.uRainTime.value = this.rainTime;
     u.uReveal.value = 1 - Math.pow(1 - t, 3);
+    u.uCalm.value += (this.calmTarget - u.uCalm.value) * (1 - Math.exp(-dt * 3));
   }
 
   render(scene, camera) {

@@ -248,6 +248,8 @@
 
   .ticker,
   .telemetry__row--extra,
+  .telemetry__status,
+  .steps__bar,
   .rail__label {
     display: none;
   }

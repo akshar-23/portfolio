@@ -1,24 +1,38 @@
-import { Section } from '../components/Section.jsx';
+import { Screen, SectionHead } from '../components/Section.jsx';
 import { skills } from '../content/site.js';
 
-export function Skills() {
+// A slowly scrolling column of skills, grouped under headers. The list is doubled so
+// it loops without a jump.
+function Feed({ groups, side }) {
+  const rows = groups.flatMap((group) => [
+    { key: `${group.group}-head`, head: true, text: group.group.replace('-', ' & ') },
+    ...group.items.map((item) => ({ key: `${group.group}-${item}`, text: item })),
+  ]);
   return (
-    <Section id="skills" title="Skills" align="left">
-      <div className="panel terminal reveal">
-        <div className="terminal__bar" aria-hidden="true">
-          <i /><i /><i /><span>~/akshar/skills</span>
-        </div>
-        <div className="terminal__body">
-          {skills.map((group) => (
-            <div key={group.group}>
-              <p className="terminal__line"><b>$</b> ls {group.group}/</p>
-              <ul className="chips">
-                {group.items.map((item) => <li className="chip" key={item}>{item}</li>)}
-              </ul>
-            </div>
-          ))}
-        </div>
+    <div className={`skill-feed skill-feed--${side} reveal`} style={{ '--i': side === 'left' ? 1 : 2 }} data-block data-scroll>
+      <ul className="skill-feed__track">
+        {[...rows, ...rows].map((row, i) => (
+          <li key={`${row.key}-${i}`} className={row.head ? 'skill-feed__head' : undefined} aria-hidden={i >= rows.length || undefined}>
+            {row.text}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export function Skills() {
+  const half = Math.ceil(skills.length / 2);
+  return (
+    <Screen id="skills" className="skills">
+      <div className="skills__head" data-block>
+        <SectionHead id="skills" title="Skills" />
+        <p className="skills__note reveal" style={{ '--i': 1 }}>
+          {skills.reduce((sum, group) => sum + group.items.length, 0)} tools across {skills.length} groups. Hover a column to stop it.
+        </p>
       </div>
-    </Section>
+      <Feed groups={skills.slice(0, half)} side="left" />
+      <Feed groups={skills.slice(half)} side="right" />
+    </Screen>
   );
 }
