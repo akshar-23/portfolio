@@ -177,10 +177,14 @@ export function startScene(canvas) {
   // the scene is drawn into a small offscreen buffer, then turned into glyphs
   const ascii = new AsciiRenderer(renderer);
 
-  // resize viewport
+  // resize viewport; upright screens get a wider lens, so what's beside the route stays
+  // in view
+  const MIN_HORIZONTAL_FOV = THREE.MathUtils.degToRad(54);
   function resize() {
     ascii.setSize(window.innerWidth, window.innerHeight);
     camera.aspect = ascii.aspect;
+    const vertical = 2 * Math.atan(Math.tan(MIN_HORIZONTAL_FOV / 2) / camera.aspect);
+    camera.fov = Math.max(75, THREE.MathUtils.radToDeg(vertical));
     camera.updateProjectionMatrix();
   }
   resize();
@@ -254,12 +258,13 @@ export function startScene(canvas) {
 
   // where the content is: measured after React has drawn the new section, and again once
   // it has settled in
-  // the planets as seen from a station's camera, as boxes in css px
+  // the planets as seen from a station's camera, as circles in css px
   const viewCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 4000);
   const probe = new THREE.Vector3();
   function obstaclesAt(station) {
     const view = flight.views[station];
     viewCamera.aspect = ascii.aspect;
+    viewCamera.fov = camera.fov;
     viewCamera.updateProjectionMatrix();
     viewCamera.position.copy(view.position);
     viewCamera.up.copy(view.up);
@@ -268,7 +273,7 @@ export function startScene(canvas) {
     const w = window.innerWidth;
     const h = window.innerHeight;
     const focal = h / 2 / Math.tan(THREE.MathUtils.degToRad(viewCamera.fov) / 2);
-    const boxes = [];
+    const circles = [];
     for (const sphere of world.obstacles) {
       probe.copy(sphere.center).applyMatrix4(viewCamera.matrixWorldInverse);
       if (probe.z > -1) continue;
@@ -278,10 +283,13 @@ export function startScene(canvas) {
       probe.copy(sphere.center).project(viewCamera);
       const x = (probe.x * 0.5 + 0.5) * w;
       const y = (0.5 - probe.y * 0.5) * h;
-      if (x + r < 0 || x - r > w || y + r < 0 || y - r > h) continue;
-      boxes.push({ left: x - r, top: y - r, right: x + r, bottom: y + r });
+      // skip circles that don't reach into the screen
+      const nx = Math.max(0, Math.min(w, x));
+      const ny = Math.max(0, Math.min(h, y));
+      if (Math.hypot(nx - x, ny - y) > r) continue;
+      circles.push({ x, y, r });
     }
-    return boxes;
+    return circles;
   }
 
   const place = () => measureLayout(obstaclesAt(journey.get().index));

@@ -38,6 +38,19 @@ body {
   z-index: 1;
 }
 
+/* bigger screens draw the interface bigger (see src/scale.js) */
+main,
+.hud,
+.overlay {
+  zoom: var(--ui-zoom, 1);
+}
+
+/* a box with more to scroll fades out at the bottom */
+[data-overflow='more'] {
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 64px), transparent);
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 64px), transparent);
+}
+
 h1,
 h2,
 h3,

@@ -77,6 +77,7 @@ function scroller(target) {
 // can this box still scroll that way?
 function canScroll(box, down) {
   if (!box || box.scrollHeight <= box.clientHeight + 1) return false;
+  if (!/(auto|scroll)/.test(getComputedStyle(box).overflowY)) return false;
   return down ? box.scrollTop + box.clientHeight < box.scrollHeight - 1 : box.scrollTop > 0;
 }
 

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { uiScale } from '../../scale.js';
 import fontUrl from '../../../fonts/ChivoMono-VariableFont_wght.ttf';
 import {
   BACKGROUND, BANDS, CELL, DUST, FIRST_SOLID, FONT, GLYPH_SETS, RAIN_HEAD, RAIN_STRENGTH, RAY_STRENGTH, SET, SLOTS,
@@ -481,14 +482,18 @@ export class AsciiRenderer {
   }
 
   setSize(width, height) {
-    this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // at most about 4K worth of pixels: past that the glyphs are already crisp, and
+    // drawing more only costs frames
+    const budget = Math.sqrt(8.3e6 / (width * height));
+    this.dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2, budget));
     this.renderer.setPixelRatio(this.dpr);
     this.renderer.setSize(width, height);
     this.renderer.getDrawingBufferSize(this.size);
 
     const css = width < 700 ? CELL.mobile : CELL.desktop;
-    const w = Math.max(4, Math.round(css.w * this.dpr));
-    const h = Math.max(6, Math.round(css.h * this.dpr));
+    const scale = uiScale(width, height);
+    const w = Math.max(4, Math.round(css.w * scale * this.dpr));
+    const h = Math.max(6, Math.round(css.h * scale * this.dpr));
     if (w !== this.cell.w || h !== this.cell.h) {
       this.cell = { w, h };
       this.buildAtlas();

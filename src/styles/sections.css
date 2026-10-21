@@ -82,12 +82,15 @@
 
 .hero__inner {
   width: 100%;
-  max-width: var(--max);
-  margin: 0 auto;
+  max-height: 100%;
+  display: flex;
 }
 
 .hero__content {
   width: min(640px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  scrollbar-width: none;
 }
 
 .hero__role {
@@ -422,28 +425,12 @@
   justify-content: center;
 }
 
-.research__head {
-  text-align: center;
-}
-
-.research__head .head__index {
-  justify-content: center;
-}
-
-.research__head .head__index::after {
-  content: '';
-  width: 20px;
-  height: 1px;
-  background: var(--accent);
-}
-
+/* the papers hug both edges of the screen; the middle is left to the gas giant */
 .orbit {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(200px, 30vw) minmax(0, 1fr);
   width: 100%;
-  max-width: var(--max);
   max-height: 100%;
-  margin: 0 auto;
   overflow-y: auto;
 }
 
@@ -458,12 +445,13 @@
 
 .orbit__side--left {
   grid-column: 1;
-  justify-items: end;
-  text-align: right;
+  justify-items: start;
 }
 
 .orbit__side--right {
   grid-column: 3;
+  justify-items: end;
+  text-align: right;
 }
 
 .orbit__item {
@@ -837,68 +825,18 @@
   }
 }
 
-/* ---------- small screens ---------- */
+/* ---------- upright screens (phones, tablets held upright) ---------- */
 
-@media (max-width: 960px) {
-  .orbit {
-    grid-template-columns: minmax(0, 1fr) minmax(120px, 16vw) minmax(0, 1fr);
-  }
-}
-
-@media (max-width: 700px) {
-  body {
-    font-size: 14px;
-  }
-
-  .section {
-    align-items: flex-start;
-    padding-left: calc(var(--hud-x) + 4px);
-    padding-right: calc(var(--hud-x) + 22px);
-  }
-
+/* content on top, the bottom third left to the ship and the scene */
+@media (max-aspect-ratio: 4 / 5) {
+  .section,
   .hero {
-    align-items: flex-end;
-  }
-
-  .col {
-    width: 100%;
-  }
-
-  .projects {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 16px;
-  }
-
-  .projects .col {
-    order: 2;
-    flex: 1;
-  }
-
-  .feed {
-    order: 1;
-    width: 100%;
-    padding: 6px;
-  }
-
-  .feed__screen {
-    aspect-ratio: 21 / 9;
+    align-items: flex-start;
+    padding-bottom: calc(var(--hud-bottom) + 24svh);
   }
 
   .research {
     justify-content: flex-start;
-  }
-
-  .research__head {
-    text-align: left;
-  }
-
-  .research__head .head__index {
-    justify-content: flex-start;
-  }
-
-  .research__head .head__index::after {
-    display: none;
   }
 
   .orbit {
@@ -910,21 +848,39 @@
     margin-bottom: 22px;
   }
 
-  .orbit__side--left {
+  .orbit__side--right {
     justify-items: start;
     text-align: left;
   }
 
-  .skills__head {
-    left: calc(var(--hud-x) + 4px);
-    width: auto;
-    right: calc(var(--hud-x) + 22px);
+  .projects {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 14px;
+  }
+
+  .projects .col {
+    order: 2;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .feed {
+    order: 1;
+    flex: none;
+    width: 100%;
+    padding: 6px;
+  }
+
+  .feed__screen {
+    aspect-ratio: 21 / 9;
   }
 
   .skill-feed {
-    top: auto;
-    bottom: var(--hud-bottom);
-    height: 46vh;
+    top: calc(var(--hud-top) + 120px);
+    bottom: calc(var(--hud-bottom) + 24svh);
+    height: auto;
     margin-top: 0;
     width: calc(50% - var(--hud-x) - 10px);
   }
@@ -937,12 +893,122 @@
     right: calc(var(--hud-x) + 22px);
   }
 
+  .skills__head {
+    left: calc(var(--hud-x) + 4px);
+    right: calc(var(--hud-x) + 22px);
+    width: auto;
+  }
+}
+
+/* ---------- phones ---------- */
+
+@media (max-width: 700px) {
+  body {
+    font-size: 14px;
+  }
+
+  .section {
+    padding-left: calc(var(--hud-x) + 4px);
+    padding-right: calc(var(--hud-x) + 22px);
+  }
+
+  .section--right .section__inner {
+    justify-content: flex-start;
+  }
+
+  .col {
+    width: 100%;
+  }
+
+  .head {
+    margin-bottom: 12px;
+  }
+
+  .about__text p,
+  .points li {
+    font-size: 13px;
+  }
+
+  .about__text p:first-child {
+    font-size: 14px;
+  }
+
+  /* the step logs fold into a row of numbers; the details below name the current one */
+  .log {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 14px;
+    border-left: 0;
+  }
+
+  .log__item {
+    display: block;
+    padding: 4px 10px;
+    border: 1px solid var(--line);
+  }
+
+  .log__item::before {
+    display: none;
+  }
+
+  .log__item[aria-current='step'] {
+    border-color: var(--accent);
+  }
+
+  .log__name,
+  .log__meta {
+    display: none;
+  }
+
+  .detail__actions .button,
+  .hero__actions .button {
+    padding: 9px 12px;
+  }
+
   .kv div {
     grid-template-columns: 7.5em 1fr;
   }
 
   .field {
     grid-template-columns: 5em 1fr;
+  }
+
+  .hero__stats {
+    gap: 6px 20px;
+  }
+}
+
+/* ---------- short screens (phones on their side) ---------- */
+
+@media (max-height: 520px) {
+  .hero__stats,
+  .skills__note {
+    display: none;
+  }
+
+  .name {
+    font-size: clamp(30px, 11vh, 60px);
+    margin-bottom: 12px;
+  }
+
+  .hero__role {
+    margin-bottom: 8px;
+  }
+
+  .hero__tagline {
+    margin-bottom: 14px;
+  }
+
+  .section,
+  .hero {
+    padding-bottom: var(--hud-bottom);
+  }
+
+  .skill-feed {
+    top: calc(var(--hud-top) + 60px);
+    bottom: var(--hud-bottom);
+    height: auto;
+    margin-top: 0;
   }
 }
 

@@ -1,3 +1,5 @@
+import { uiScale } from '../scale.js';
+
 // Where the page's content is on screen, so the scene can work around it: the glyphs
 // dim under it, and the ship flies to the biggest empty spot.
 
@@ -21,10 +23,12 @@ function hudInsets() {
     probe.remove();
     return value;
   };
+  // the HUD is drawn at the interface scale
+  const scale = uiScale();
   return {
-    x: read('--hud-x', 40) + 70,
-    top: read('--hud-top', 80) + 30,
-    bottom: read('--hud-bottom', 90) + 20,
+    x: (read('--hud-x', 40) + 70) * scale,
+    top: (read('--hud-top', 80) + 30) * scale,
+    bottom: (read('--hud-bottom', 90) + 20) * scale,
   };
 }
 
@@ -35,17 +39,21 @@ function distance(x, y, box) {
   return Math.hypot(dx, dy);
 }
 
-function findFree(blocks, insets) {
+// circles: planets on screen ({ x, y, r }, css px). The ship would rather not sit on
+// them, but it can fly in front of one when that's where the room is.
+function findFree(blocks, circles, insets) {
   const w = window.innerWidth;
   const h = window.innerHeight;
+  const portrait = h > w * 1.2;
   const left = insets.x;
   const right = w - insets.x;
   // the ship stays in the lower part of the screen, below the horizon of a chase camera;
-  // the upper part is where each section's planet sits
-  // (and not too close to the bottom edge, where the camera sees it steeply from above)
-  const top = Math.max(insets.top, h * 0.44);
-  const bottom = Math.max(top + 40, h - insets.bottom - h * 0.13);
-  let best = { x: (left + right) / 2, y: (top + bottom) / 2, score: -Infinity };
+  // the upper part is where each section's planet sits (and not too close to the bottom
+  // edge, where the camera sees it steeply from above)
+  const top = Math.max(insets.top, h * (portrait ? 0.5 : 0.44));
+  const bottom = Math.max(top + 40, h - insets.bottom - h * (portrait ? 0.02 : 0.13));
+  const middle = (left + right) / 2;
+  let best = { x: middle, y: (top + bottom) / 2, score: -Infinity };
   const COLS = 28;
   const ROWS = 18;
   for (let i = 0; i <= COLS; i++) {
@@ -54,7 +62,9 @@ function findFree(blocks, insets) {
       const y = top + ((bottom - top) * j) / ROWS;
       const edge = Math.min(x - left, right - x) * 1.2 + Math.min(y - top, bottom - y) * 0.6 + 40;
       const clear = blocks.reduce((min, box) => Math.min(min, distance(x, y, box)), Infinity);
-      const score = Math.min(clear, edge);
+      const crowd = circles.reduce((max, c) => Math.max(max, c.r + 30 - Math.hypot(x - c.x, y - c.y)), 0);
+      const centered = 1 - Math.abs(x - middle) / (middle - left);
+      const score = Math.min(clear, edge) - Math.min(crowd, 200) * 0.5 + centered * 50;
       if (score > best.score) best = { x, y, score };
     }
   }
@@ -87,8 +97,8 @@ function measureShapes(roots) {
   return shapes;
 }
 
-// extra: more boxes (css px) to keep the ship out of, like the planets in view
-export function measureLayout(extra = []) {
+// circles: planets in view (css px), which the ship keeps clear of where it can
+export function measureLayout(circles = []) {
   const elements = document.querySelectorAll('.section[data-active="true"] [data-block]');
   const blocks = [];
   for (const el of elements) {
@@ -99,7 +109,7 @@ export function measureLayout(extra = []) {
   }
   layout.blocks = blocks;
   layout.shapes = measureShapes(elements);
-  layout.free = findFree([...blocks, ...extra], hudInsets());
+  layout.free = findFree(blocks, circles, hudInsets());
   return layout;
 }
 

@@ -3,6 +3,7 @@ import { Hud } from './components/Hud.jsx';
 import { ProjectOverlay } from './components/ProjectOverlay.jsx';
 import { sections } from './content/site.js';
 import { attachInput, journey } from './journey.js';
+import { uiScale } from './scale.js';
 import { About } from './sections/About.jsx';
 import { Contact } from './sections/Contact.jsx';
 import { Experience } from './sections/Experience.jsx';
@@ -48,6 +49,30 @@ export function App() {
   }, []);
 
   useEffect(() => journey.lock(slug !== null), [slug]);
+
+  // the interface scale for big screens, and a fade on boxes with more to scroll
+  useEffect(() => {
+    const root = document.documentElement;
+    const hints = () => {
+      root.style.setProperty('--ui-zoom', uiScale());
+      document.querySelectorAll('[data-scroll]').forEach((box) => {
+        const scrolls = /(auto|scroll)/.test(getComputedStyle(box).overflowY) && box.scrollHeight > box.clientHeight + 1;
+        const more = scrolls && box.scrollTop + box.clientHeight < box.scrollHeight - 4;
+        box.dataset.overflow = more ? 'more' : 'none';
+      });
+    };
+    hints();
+    const later = () => setTimeout(hints, 60);
+    const unsubscribe = journey.subscribe(later);
+    window.addEventListener('resize', hints);
+    document.addEventListener('scroll', hints, true);
+    document.fonts?.ready.then(hints);
+    return () => {
+      unsubscribe();
+      window.removeEventListener('resize', hints);
+      document.removeEventListener('scroll', hints, true);
+    };
+  }, []);
 
   return (
     <>
