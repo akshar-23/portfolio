@@ -1,0 +1,45 @@
+export const meta = {
+  title: 'Spacetime PCG Research Suite',
+  summary: 'Open-source tools that generate 2D, 3D-blended and physics-based levels through space and time.',
+  role: 'Research · Game Design Lab',
+  tags: ['Python', 'PySAT', 'Z3', 'Pandas', 'ParaView'],
+  featured: true,
+  order: 1,
+  cover: null,
+  // TODO: add the GitHub and publication links
+  links: [
+    { label: 'GitHub', url: null },
+    { label: 'Publication', url: null },
+  ],
+};
+
+An open-source suite for 2D, 3D-blended and physics-based level generation, with an interactive editor and VTK 3D views. It grew out of extending the Sturgeon level generator to generate levels through both space and time.
+
+<Stats items={[
+  { value: '100–500×', label: 'faster than Spacetime WFC' },
+  { value: '3', label: 'generation domains, benchmarked' },
+  { value: '3', label: 'first-author papers' },
+]} />
+
+<Tabs>
+  <Tab label="Overview">
+
+  Levels are modelled as constraint problems, so the generator can guarantee they are solvable. The editor lets you change a level or a path and see the result in real time.
+
+  </Tab>
+  <Tab label="Under the hood">
+
+  - Constraint models in **PySAT**, and continuous spacetime gameplay solved with **Z3 SMT**
+  - 4D spacetime blending of learned game mechanics
+  - Generation speed and solvability benchmarked across the three domains with **Pandas**, surfacing per-domain performance trade-offs
+  - 3D voxel views of generated levels through **VTK / ParaView**
+
+  </Tab>
+  <Tab label="Publications">
+
+  - AAAI AIIDE 2025 · first author
+  - FDG 2026 PCG Workshop · first author
+  - FDG 2026 PCG Workshop · first author
+
+  </Tab>
+</Tabs>

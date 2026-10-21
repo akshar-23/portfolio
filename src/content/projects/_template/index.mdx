@@ -1,0 +1,88 @@
+{/*
+  New project:
+    1. copy this folder and rename it, the folder name becomes the url: #/project/<folder-name>
+    2. drop images and videos into the new folder and import them below
+    3. fill in meta, then write the page underneath in markdown
+
+  Folders starting with _ (like this one) are not shown on the site.
+*/}
+
+{/* import cover from './cover.png' */}
+{/* import trailer from './trailer.mp4' */}
+{/* import shot1 from './shot-1.png' */}
+{/* import shot2 from './shot-2.png' */}
+
+export const meta = {
+  title: 'Project name',
+  summary: 'One line that sells it, shown on the card.',
+  role: 'Your role · team or studio',
+  tags: ['Unity', 'C#'],
+  // featured projects get a card, the rest are listed in the archive
+  featured: true,
+  // lower comes first
+  order: 10,
+  // an imported image, or null for a generated ASCII planet
+  cover: null,
+  // links with url: null are hidden
+  links: [
+    { label: 'Steam', url: null },
+    { label: 'GitHub', url: null },
+  ],
+};
+
+A paragraph or two about what it is and why it is interesting.
+
+<Stats items={[
+  { value: '30%', label: 'something you improved' },
+  { value: '100+', label: 'players in playtests' },
+]} />
+
+<Tabs>
+  <Tab label="Overview">
+
+  What the game or tool is, from the player's side.
+
+  </Tab>
+  <Tab label="My role">
+
+  - What you built
+  - What you owned
+
+  </Tab>
+  <Tab label="Tech">
+
+  How it works under the hood.
+
+  </Tab>
+</Tabs>
+
+## Media
+
+{/* A video file from this folder: */}
+{/* <Video src={trailer} caption="Gameplay trailer" /> */}
+
+{/* Or a hosted one: */}
+{/* <Video youtube="VIDEO_ID" caption="Trailer" /> */}
+{/* <Video vimeo="VIDEO_ID" /> */}
+
+{/* Screenshots, click to enlarge: */}
+{/* <Gallery images={[{ src: shot1, alt: 'Main menu' }, { src: shot2, alt: 'Boss fight' }]} /> */}
+
+{/* A before / after slider: */}
+{/* <Compare before={shot1} after={shot2} labels={['prototype', 'shipped']} /> */}
+
+{/* A playable build or any page in a frame: */}
+{/* <Embed src="https://itch.io/embed-upload/ID" title="Play in the browser" ratio="16 / 10" /> */}
+
+<Callout>
+
+A note worth pointing out.
+
+</Callout>
+
+<details>
+  <summary>A section that opens on click</summary>
+
+  Longer details people can expand.
+
+</details>

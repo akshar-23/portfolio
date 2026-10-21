@@ -1,0 +1,38 @@
+import cover from './cover.png';
+
+export const meta = {
+  title: 'Cricket Manager: League',
+  summary: 'A cricket card-collection and team management game, live on Google Play with ongoing updates.',
+  role: 'Unity Developer · Arcadon Games',
+  tags: ['Unity', 'C#', 'Firebase', 'Cloud Functions'],
+  featured: true,
+  order: 2,
+  cover,
+  // TODO: add the Play Store link
+  links: [{ label: 'Google Play', url: null }],
+};
+
+A social card-collection and sports management game. I built core gameplay mechanics, state machines and the interactive player systems, and connected the game to Firebase for inventory and pseudo-multiplayer features.
+
+<Stats items={[
+  { value: '100+', label: 'alpha testers across 3 versions' },
+  { value: '85%', label: 'tester satisfaction' },
+  { value: '40%', label: 'fewer bug reports' },
+]} />
+
+<Tabs>
+  <Tab label="Gameplay">
+
+  - Core gameplay mechanics and state machines in Unity / C#
+  - A match-simulation system that processes 30 matches a minute
+  - Input responsiveness improved by 30%
+
+  </Tab>
+  <Tab label="Backend">
+
+  - Firebase Realtime Database and Cloud Functions for dynamic inventory management and pseudo-multiplayer
+  - 1,000+ user profiles and inventories stored and synced, with sub-100 ms responses
+  - Load times cut by 40%
+
+  </Tab>
+</Tabs>

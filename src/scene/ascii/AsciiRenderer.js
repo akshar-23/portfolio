@@ -124,6 +124,7 @@ const fragmentShader = /* glsl */ `
   uniform vec3 uDark[NSETS];
   uniform vec3 uBright[NSETS];
   uniform vec4 uParams[NSETS]; // jitter, scramble, gamma, grain
+  uniform vec4 uPulses[4]; // x, y (device px), start time, on
 
   float glyph(int set, int index, vec2 f) {
     vec2 uv = vec2(
@@ -205,6 +206,17 @@ const fragmentShader = /* glsl */ `
     float md = length(center - uMouse) / (uCell.y * 9.0);
     float lantern = exp(-md * md);
 
+    // ripples from the name in the hero: rings that spread out and fade
+    float ripple = 0.0;
+    for (int i = 0; i < 4; i++) {
+      vec4 pulse = uPulses[i];
+      float age = uTime - pulse.z;
+      if (pulse.w < 0.5 || age < 0.0 || age > 2.4) continue;
+      float ring = (length(center - pulse.xy) - age * uCell.y * 40.0) / (uCell.y * 2.2);
+      ripple = max(ripple, exp(-ring * ring) * (1.0 - age / 2.4));
+    }
+    lantern = max(lantern, ripple);
+
     vec2 drop = rain(cell);
     float trail = drop.x * uRain;
     float head = drop.y * uRain;
@@ -225,7 +237,7 @@ const fragmentShader = /* glsl */ `
 
       float dust = noise12(cell * vec2(0.035, 0.06) + vec2(uTime * 0.015, 0.0)) * 0.7
                  + noise12(cell * 0.21 + 5.0) * 0.3;
-      dust = smoothstep(0.6, 0.9, dust) * 0.55 + lantern * 0.3 * step(0.55, h2);
+      dust = smoothstep(0.6, 0.9, dust) * 0.55 + lantern * 0.3 * step(0.55, h2) + ripple * 0.5;
 
       // rays come in as lines of glyphs pointing away from the sun
       vec2 fromSun = center + uOffset - uSunUV * uGrid * uCell;
@@ -363,7 +375,9 @@ export class AsciiRenderer {
       uDark: { value: GLYPH_SETS.map((s) => toVec3(s.dark)) },
       uBright: { value: GLYPH_SETS.map((s) => toVec3(s.bright)) },
       uParams: { value: GLYPH_SETS.map((s) => new THREE.Vector4(s.jitter, s.scramble, s.gamma, s.grain)) },
+      uPulses: { value: Array.from({ length: 4 }, () => new THREE.Vector4()) },
     };
+    this.nextPulse = 0;
 
     this.raysScene = createPass(this.raysUniforms, raysShader);
     this.passScene = createPass(this.uniforms, fragmentShader);
@@ -468,6 +482,12 @@ export class AsciiRenderer {
 
   clearPointer() {
     this.uniforms.uMouse.value.set(-1e5, -1e5);
+  }
+
+  // a ring of brighter, scrambling glyphs spreading out from x, y (css px)
+  pulse(x, y) {
+    const slot = this.uniforms.uPulses.value[this.nextPulse++ % 4];
+    slot.set(x * this.dpr, this.size.y - y * this.dpr, this.time, 1);
   }
 
   // where the sun is on screen, so the rays know where to come from

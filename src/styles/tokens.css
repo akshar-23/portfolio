@@ -1,0 +1,33 @@
+/* The same colors the ASCII background is drawn with (src/scene/ascii/palette.js). */
+:root {
+  --ink: #080a14;
+  --ink-raised: #0c1020;
+  --panel: rgba(8, 11, 22, 0.76);
+  --line: rgba(150, 168, 220, 0.16);
+  --line-strong: rgba(150, 168, 220, 0.34);
+
+  --text: #ebe8df;
+  --text-dim: #a6aec6;
+  --text-faint: #6b7493;
+
+  --rust: #f06a45;
+  --ember: #ffa14a;
+  --gold: #ffd889;
+  --teal: #72cfa6;
+  --ice: #c9f2ff;
+  --lilac: #bcc8ff;
+  --rose: #e08ab5;
+  --moon: #f2eee5;
+
+  /* each section sets its own */
+  --accent: var(--rust);
+
+  --font-display: 'Martian Mono Variable', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-mono: 'Martian Mono Variable', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-body: 'Space Grotesk Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --gutter: clamp(16px, 5vw, 72px);
+  --max: 1240px;
+  --nav-height: 64px;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}

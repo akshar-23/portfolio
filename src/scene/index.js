@@ -1,7 +1,5 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SET } from './ascii/palette.js';
 import { createAsciiMaterial, updateSceneUniforms } from './ascii/materials.js';
 import { AsciiRenderer } from './ascii/AsciiRenderer.js';
@@ -14,21 +12,26 @@ import { createStation } from './world/station.js';
 import { createGalaxy } from './world/galaxy.js';
 import { createNebula } from './world/nebula.js';
 
-// One station per page section; the ship rests there when the section snaps in.
+// One station per page section ([data-station] in the page, top to bottom): the ship
+// reaches a station as its section scrolls into view.
 const ROUTE = {
   points: [
-    [0, 0, 0],
+    [0, 0, 0], // hero
     [-6, 4, -60],
-    [-30, 14, -150],
+    [-30, 14, -150], // about
     [-12, 6, -230],
-    [35, -8, -320],
-    [30, 6, -400],
-    [-25, 22, -480],
-    [-15, 10, -560],
-    [8, 0, -640],
+    [25, -4, -300], // experience
+    [35, 4, -370],
+    [10, 14, -450], // research
+    [-15, 20, -520],
+    [-28, 18, -600], // projects
+    [-10, 8, -680],
+    [18, 0, -760], // skills
+    [22, -4, -840],
+    [6, 0, -920], // contact
   ],
-  stations: [0, 2, 4, 6, 8],
-  rolls: [0, 1, 0, -1],
+  stations: [0, 2, 4, 6, 8, 10, 12],
+  rolls: [0, 1, 0, 0, -1, 0],
 };
 
 const SHIP_PARTS = {
@@ -59,72 +62,76 @@ function buildWorld(scene, flight) {
   const sunDir = new THREE.Vector3(0.38, 0.4, 0.83).normalize().multiplyScalar(1700);
   const sun = add(createSun(sunRadius), place(0, sunDir.x, sunDir.y, sunDir.z), [0, 0.02, 0]);
 
-  // 0 - hero
+  // hero: content on the left, so the big planet and the sun are on the right
   add(createPlanet(15, { set: SET.RUST, noise: 0.8, noiseScale: 0.18, rim: 0.15, embers: 0.025, speckleScale: 2.2 }),
     place(0, 23, 8, 10), [0.08, 0, 0.08]);
   add(createPlanet(6, { set: SET.TEAL, noise: 0.5, noiseScale: 0.5 }), place(0, -60, 25, 160), [0, 0.1, 0]);
 
-  // 1 - about
+  // about: content on the right
   add(createPlanet(10, { set: SET.TEAL, noise: 0.5, noiseScale: 0.3, embers: 0.04, flowers: 0.08, speckleScale: 6 }),
     place(1, -17, 9, 16), [0.08, 0, 0.08]);
-  const moonlet = add(createPlanet(5, { set: SET.MOON, noise: 0.7, noiseScale: 0.5, craters: 1 }),
-    place(1, 22, -8, 80), [0.1, 0, 0.1]);
-  moonlet.add(createTorusRing(8, 0.75, { set: SET.EMBER, ambient: 0.15, noise: 0.6, noiseScale: 1.2 }));
 
-  // 2 - gas giant with open rings
+  // experience: content on the left
+  const moonlet = add(createPlanet(6, { set: SET.MOON, noise: 0.7, noiseScale: 0.45, craters: 1 }),
+    place(2, 21, 2, 42), [0.1, 0, 0.1]);
+  moonlet.add(createTorusRing(9.5, 0.8, { set: SET.EMBER, ambient: 0.15, noise: 0.6, noiseScale: 1.2 }));
+
+  // research: content on the right, the gas giant on the left
   const giant = createGasGiant(36);
-  const giantPos = place(2, 60, 5, 150);
-  const view2 = flight.views[2];
-  const ringAxis = view2.up.clone().addScaledVector(view2.forward, -0.5).addScaledVector(view2.right, -0.25).normalize();
+  const view3 = flight.views[3];
+  const ringAxis = view3.up.clone().addScaledVector(view3.forward, -0.5).addScaledVector(view3.right, 0.25).normalize();
   giant.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), ringAxis);
-  add(giant.group, giantPos);
+  add(giant.group, place(3, -58, 4, 150));
   spinning.push([giant.body, [0, 0.05, 0]]);
-
-  // asteroids tumbling along the route from about to projects
-  const asteroids = createAsteroidField({ curve: flight.curve, from: flight.stationT[1] + 0.03, to: flight.stationT[3] });
-  scene.add(asteroids.mesh);
-  updates.push((time) => asteroids.update(time));
 
   const iceMoon = createPlanet(4, { set: SET.ICE, noise: 0.6, noiseScale: 0.6, craters: 0.6 });
   giant.group.add(iceMoon);
   updates.push((time) => iceMoon.position.set(Math.cos(time * 0.15) * 62, 6, Math.sin(time * 0.15) * 62));
 
-  const comet = createComet({ from: place(2, -160, 70, 230), to: place(3, 160, 40, 260), period: 60 });
-  scene.add(comet.group);
-  updates.push((time) => comet.update(time, sun.position, flight.res));
+  // asteroids tumbling along the route from experience to projects
+  const asteroids = createAsteroidField({ curve: flight.curve, from: flight.stationT[2] + 0.02, to: flight.stationT[4] });
+  scene.add(asteroids.mesh);
+  updates.push((time) => asteroids.update(time));
 
-  // 3 - space station inside a nebula
+  // projects: the grid covers the middle, so things sit around the edges
   const station = createStation(0.8);
-  add(station.group, place(3, -20, 3, 34));
-  station.group.lookAt(flight.views[3].position);
+  add(station.group, place(4, -32, 15, 60));
+  station.group.lookAt(flight.views[4].position);
   station.group.rotateY(1.0);
   station.group.rotateX(0.35);
   updates.push((time) => station.update(time));
 
   const ember = add(createPlanet(5, { set: SET.EMBER, noise: 0.7, noiseScale: 0.6, rim: 0.2 }),
-    place(3, 18, -12, 60), [0, 0.15, 0]);
+    place(4, 36, 14, 80), [0, 0.15, 0]);
   const emberRing = createTorusRing(7, 0.75, { set: SET.TEAL, ambient: 0.2, noise: 0.4, noiseScale: 1 });
   emberRing.rotation.x = Math.PI * 0.4;
   add(emberRing, ember.position, [0, 0, -0.15]);
 
-  // 4 - contact: the big moon
+  // skills: content on the left, an ice world and a passing comet on the right
+  add(createPlanet(8, { set: SET.ICE, albedo: 1.1, noise: 0.6, noiseScale: 0.35, craters: 0.8, rim: 0.2 }),
+    place(5, 24, 3, 45), [0.05, 0.08, 0]);
+  const comet = createComet({ from: place(5, -40, 60, 200), to: place(5, 190, 10, 160), period: 45 });
+  scene.add(comet.group);
+  updates.push((time) => comet.update(time, sun.position, flight.res));
+
+  // contact: content on the left, the big moon on the right
   add(createPlanet(16, { set: SET.MOON, albedo: 1.3, ambient: 0.1, noise: 0.55, noiseScale: 0.16, craters: 1, rim: 0.15 }),
-    place(4, 24, 8, 40), [0.06, 0, 0.06]);
-  add(createPlanet(8, { set: SET.RUST, noise: 0.8, noiseScale: 0.3, embers: 0.03, speckleScale: 3 }),
-    place(4, -20, -10, 12), [0.1, 0, 0.1]);
+    place(6, 24, 8, 40), [0.06, 0, 0.06]);
+  add(createPlanet(6, { set: SET.RUST, noise: 0.8, noiseScale: 0.35, embers: 0.03, speckleScale: 3 }),
+    place(6, 42, -20, 70), [0.1, 0, 0.1]);
   add(createPlanet(9, { set: SET.LILAC, noise: 0.3, noiseScale: 0.3, stripes: 0.7, stripeFreq: 16 }),
-    place(4, -50, 30, 160), [0, 0.08, 0]);
+    place(6, -50, 30, 160), [0, 0.08, 0]);
 
   // far background
-  const galaxy = add(createGalaxy(900), place(1, -700, -150, 1100));
-  galaxy.lookAt(flight.views[1].position);
+  const galaxy = add(createGalaxy(900), place(5, 650, 180, 1100));
+  galaxy.lookAt(flight.views[5].position);
   galaxy.rotateX(1.0);
 
   for (const [view, x, y, z, size] of [
     [0, -140, 70, 320, 200],
-    [2, -100, -30, 170, 120],
-    [3, -60, 25, 130, 140],
-    [3, 80, 50, 220, 180],
+    [2, 90, -30, 170, 140],
+    [4, -60, 25, 130, 150],
+    [4, 80, 50, 220, 180],
   ]) {
     add(createNebula(size), place(view, x, y, z));
   }
@@ -197,17 +204,36 @@ export function startScene(canvas) {
     }
   );
 
-  // scroll animation: progress runs 0 -> 1 over the page and snaps to each section
-  gsap.registerPlugin(ScrollTrigger);
-  const journey = { progress: 0 };
-  gsap.to(journey, {
-    progress: 1,
-    ease: 'none',
-    scrollTrigger: {
-      scrub: 1.5,
-      snap: 1 / (flight.stations - 1),
-    },
-  });
+  // scroll position -> progress along the route: station i is reached when section i
+  // is centered on screen (or, for tall sections, when its top reaches the top)
+  const stops = [];
+  function measureStations() {
+    const sections = document.querySelectorAll('[data-station]');
+    const max = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
+    stops.length = 0;
+    sections.forEach((section, i) => {
+      const top = section.getBoundingClientRect().top + window.scrollY;
+      const settle = top + Math.min(section.offsetHeight, window.innerHeight) / 2 - window.innerHeight / 2;
+      const stop = i === 0 ? 0 : i === sections.length - 1 ? max : THREE.MathUtils.clamp(settle, 0, max);
+      stops.push(Math.max(stop, (stops[i - 1] ?? -1) + 1));
+    });
+  }
+  measureStations();
+  new ResizeObserver(measureStations).observe(document.body);
+  document.fonts?.ready.then(measureStations);
+
+  function scrollProgress() {
+    if (stops.length < 2) return 0;
+    const y = window.scrollY;
+    let k = 0;
+    while (k < stops.length - 2 && y >= stops[k + 1]) k++;
+    const f = THREE.MathUtils.clamp((y - stops[k]) / (stops[k + 1] - stops[k]), 0, 1);
+    return (k + f) / (stops.length - 1);
+  }
+  const journey = { progress: scrollProgress() };
+
+  // lighting a letter of the name sends a ripple through the glyphs
+  window.addEventListener('ascii:pulse', (event) => ascii.pulse(event.detail.x, event.detail.y));
 
   // parallax effect
   const cursor = { x: 0, y: 0 };
@@ -250,6 +276,7 @@ export function startScene(canvas) {
     const ease = 1 - Math.exp(-dt * 3);
 
     world.update(time, dt);
+    journey.progress += (scrollProgress() - journey.progress) * (1 - Math.exp(-dt * 2.5));
 
     // the ship follows the route, drifts toward the cursor and banks into turns
     const { t, roll } = flight.sample(journey.progress);
