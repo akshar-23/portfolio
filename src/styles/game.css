@@ -1,0 +1,218 @@
+/* ---------- the mini-game ---------- */
+
+/* the portfolio steps aside while the game is on */
+main {
+  transition: opacity 0.4s var(--ease), visibility 0s linear 0s;
+}
+
+html[data-game='true'] main {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s var(--ease), visibility 0s linear 0.3s;
+}
+
+html[data-game='true'],
+html[data-game='true'] body {
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.hud--game {
+  --accent: var(--ember);
+}
+
+.game-score {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 auto;
+}
+
+.game-score b {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.hud--game .hud__top .button {
+  margin-left: 0;
+}
+
+.game-telemetry .telemetry__row {
+  align-items: center;
+}
+
+.game-shields {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.game-shields i {
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--rust);
+  transform: rotate(45deg);
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+.game-shields i[data-on='true'] {
+  background: var(--ember);
+  border-color: var(--ember);
+  box-shadow: 0 0 10px var(--ember);
+}
+
+.game-best {
+  cursor: default;
+}
+
+/* messages in the middle of the screen */
+.game-center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+  text-transform: none;
+  letter-spacing: normal;
+  pointer-events: none;
+}
+
+.game-countdown {
+  font-family: var(--font-display);
+  font-size: clamp(64px, 12vw, 140px);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text);
+  text-shadow: 0 0 30px var(--ink), 0 0 60px color-mix(in srgb, var(--ember) 40%, transparent);
+  animation: count 1s var(--ease-out) both;
+}
+
+@keyframes count {
+  from { opacity: 0; transform: scale(1.4); }
+  60% { opacity: 1; transform: scale(1); }
+  to { opacity: 0.2; }
+}
+
+.game-hint {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--text-dim);
+  text-shadow: 0 0 12px var(--ink);
+}
+
+.game-over {
+  pointer-events: auto;
+  background: radial-gradient(closest-side, rgba(8, 10, 20, 0.85), rgba(8, 10, 20, 0) 100%);
+}
+
+.game-over__tag {
+  color: var(--rust);
+}
+
+.game-over__title {
+  color: var(--text);
+  font-size: clamp(30px, 5vw, 56px);
+  letter-spacing: 0.02em;
+}
+
+.game-over__score {
+  margin: 4px 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(36px, 6vw, 64px);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--ember);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 24px color-mix(in srgb, var(--ember) 45%, transparent);
+}
+
+.game-over__best b {
+  color: var(--gold);
+  font-weight: 500;
+}
+
+.game-over__stats {
+  display: flex;
+  gap: 28px;
+  margin: 10px 0 6px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.game-over__stats dt {
+  color: var(--text-faint);
+}
+
+.game-over__stats dd {
+  margin: 2px 0 0;
+  color: var(--text);
+}
+
+.game-over__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.game-over__links {
+  display: flex;
+  gap: 22px;
+  margin: 10px 0 0;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.game-over__links a,
+.game-over__links button {
+  padding: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: var(--text-dim);
+  text-decoration: none;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.game-over__links a:hover,
+.game-over__links button:hover {
+  color: var(--accent);
+}
+
+/* the play button in the portfolio HUD */
+.hud__play {
+  margin-left: auto;
+}
+
+.hud__play + .button {
+  margin-left: 0;
+}
+
+@media (max-width: 700px) {
+  .game-score b {
+    font-size: 18px;
+  }
+
+  .hud--game .hud__brand {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-countdown {
+    animation: none;
+  }
+}

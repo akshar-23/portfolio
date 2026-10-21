@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Hud } from './components/Hud.jsx';
+import { GameHud } from './components/GameHud.jsx';
+import { game, useGame } from './game/state.js';
 import { ProjectOverlay } from './components/ProjectOverlay.jsx';
 import { sections } from './content/site.js';
 import { attachInput, journey } from './journey.js';
@@ -48,7 +50,22 @@ export function App() {
     };
   }, []);
 
-  useEffect(() => journey.lock(slug !== null), [slug]);
+  const play = useGame();
+  const playing = play.status !== 'off';
+  useEffect(() => journey.lock(slug !== null || playing), [slug, playing]);
+
+  // G starts the game, Esc leaves it
+  useEffect(() => {
+    const root = document.documentElement;
+    root.dataset.game = playing;
+    const keys = (event) => {
+      if (event.target.closest?.('input, textarea, select, [contenteditable]')) return;
+      if (event.key === 'Escape' && game.active) game.quit();
+      else if ((event.key === 'g' || event.key === 'G') && !game.active && !projectFromHash()) game.start();
+    };
+    window.addEventListener('keydown', keys);
+    return () => window.removeEventListener('keydown', keys);
+  }, [playing]);
 
   // the interface scale for big screens, and a fade on boxes with more to scroll
   useEffect(() => {
@@ -76,7 +93,7 @@ export function App() {
 
   return (
     <>
-      <Hud />
+      {playing ? <GameHud /> : <Hud />}
       <main>
         <Hero />
         <About />

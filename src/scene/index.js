@@ -12,6 +12,8 @@ import { createStation } from './world/station.js';
 import { createGalaxy } from './world/galaxy.js';
 import { createNebula } from './world/nebula.js';
 import { createExhaust } from './world/exhaust.js';
+import { createGameMode } from './game.js';
+import { game } from '../game/state.js';
 import { journey } from '../journey.js';
 import { telemetry } from './telemetry.js';
 import { layout, measureLayout } from './layout.js';
@@ -208,6 +210,10 @@ export function startScene(canvas) {
   const exhaust = createExhaust();
   scene.add(exhaust.points);
 
+  // the mini-game flies the same route; it takes over the ship while it's on
+  const run = createGameMode({ scene, flight, camera, ascii });
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   new GLTFLoader().load(
     `${import.meta.env.BASE_URL}models/scene.gltf`,
     function (gltf) {
@@ -294,6 +300,10 @@ export function startScene(canvas) {
 
   const place = () => measureLayout(obstaclesAt(journey.get().index));
   function relayout() {
+    if (game.active) {
+      ascii.clearMask();
+      return;
+    }
     place();
     ascii.setMask(layout.shapes);
   }
@@ -308,6 +318,30 @@ export function startScene(canvas) {
   window.addEventListener('resize', () => requestAnimationFrame(relayout));
   document.fonts?.ready.then(relayout);
   setTimeout(relayout, 300);
+
+  // starting the game clears the content's holes; quitting jumps back to the section we
+  // left from
+  let lastStatus = game.get().status;
+  let gameT = 0;
+  game.subscribe(() => {
+    const { status } = game.get();
+    const was = lastStatus;
+    if (status === was) return;
+    lastStatus = status;
+    if (status === 'countdown') {
+      run.start(was === 'off' ? flight.sample(journeyState.progress).t : gameT);
+      ascii.clearMask();
+      ascii.setFocus(true);
+      if (was === 'off') ascii.shock(0.55, '#dce8ff');
+    } else if (status === 'off') {
+      run.stop();
+      ascii.setFocus(false);
+      journeyState.progress = tween.from = tween.to = journey.progress();
+      started = false;
+      ascii.shock(0.6, '#dce8ff');
+      setTimeout(relayout, 450);
+    }
+  });
 
   // lighting a letter of the name sends a ripple through the glyphs
   window.addEventListener('ascii:pulse', (event) => ascii.pulse(event.detail.x, event.detail.y));
@@ -364,11 +398,27 @@ export function startScene(canvas) {
     const along = Math.min((time - tween.start) / tween.duration, 1);
     journeyState.progress = tween.from + (tween.to - tween.from) * easeInOut(along);
 
-    // the ship follows the route, steers to the empty part of the screen, swerves
-    // during flights and banks into turns
-    const { t, roll } = flight.sample(journeyState.progress);
+    // in the game the run decides where the ship is; otherwise the ship follows the route,
+    // steers to the empty part of the screen, swerves during flights and banks into turns
+    const playing = game.active;
+    let t;
+    let roll = 0;
+    let runStep = null;
+    if (playing) {
+      onScreen.copy(shipMiddle).project(camera);
+      runStep = run.step(dt, onScreen);
+      t = gameT = runStep.t;
+      if (runStep.jumped) started = false;
+    } else {
+      ({ t, roll } = flight.sample(journeyState.progress));
+    }
     flight.frameAt(t, frame);
 
+    if (playing) {
+      lateral = runStep.x;
+      offset.y = runStep.y;
+      bank = runStep.bank;
+    } else {
     // where it should be on screen (ndc), nudged a little by the cursor
     target.set(
       (layout.free.x / window.innerWidth) * 2 - 1 + cursor.x * 0.12,
@@ -390,9 +440,10 @@ export function startScene(canvas) {
     // banking needs speed: in the turns while flying, level when parked at a station
     const turn = -flight.turnAt(t) * 0.35 * warp - sway * 0.03;
     bank += (THREE.MathUtils.clamp(turn, -0.7, 0.7) - bank) * ease;
+    }
 
     // when parked it doesn't sit still: it hovers, sways and noses around a little
-    const idle = 1 - warp;
+    const idle = playing ? 0 : 1 - warp;
     const hover = Math.sin(time * 1.7) * 0.45 * idle;
     const sideDrift = Math.sin(time * 0.55) * 0.9 * idle;
     shipRig.position.copy(frame.position)
@@ -402,14 +453,22 @@ export function startScene(canvas) {
     shipRig.quaternion.setFromRotationMatrix(basis)
       .multiply(rollQuat.setFromAxisAngle(rollAxis, bank + roll + Math.sin(time * 0.9) * 0.1 * idle))
       .multiply(yawQuat.setFromEuler(idleTurn.set(Math.sin(time * 1.3) * 0.05 * idle, Math.sin(time * 0.7) * 0.08 * idle, 0)));
+    shipRig.visible = !playing || runStep.showShip;
     shipRig.updateMatrixWorld();
     shipMiddle.copy(shipCenter).applyMatrix4(shipRig.matrixWorld);
-    exhaust.update(dt, shipRig, nozzles, warp);
+    exhaust.update(dt, shipRig, shipRig.visible ? nozzles : [], warp);
+    if (playing) run.collide(shipMiddle);
 
     // the chase camera lags a little, so it swings out in the turns, but it always
     // looks just ahead of the ship so the ship stays in frame
     chaseCamera(frame, chase, aim);
-    chase.addScaledVector(frame.up, -cursor.y).addScaledVector(frame.right, lateral * 0.2 + cursor.x);
+    if (playing) {
+      // in the game the camera leans after the ship, but less than the ship moves
+      chase.addScaledVector(frame.right, lateral * 0.45).addScaledVector(frame.up, offset.y * 0.3);
+      aim.addScaledVector(frame.right, lateral * 0.5).addScaledVector(frame.up, offset.y * 0.35);
+    } else {
+      chase.addScaledVector(frame.up, -cursor.y).addScaledVector(frame.right, lateral * 0.2 + cursor.x);
+    }
     if (!started) {
       camera.position.copy(chase);
       lookAt.copy(aim);
@@ -419,6 +478,10 @@ export function startScene(canvas) {
     const follow = 1 - Math.exp(-dt * 6);
     camera.position.lerp(chase, follow);
     lookAt.lerp(aim, follow);
+    if (playing && runStep.shake > 0 && !reducedMotion) {
+      camera.position.x += (Math.random() - 0.5) * runStep.shake * 1.2;
+      camera.position.y += (Math.random() - 0.5) * runStep.shake * 1.2;
+    }
     look.subVectors(lookAt, camera.position).normalize();
     camera.up.copy(frame.up).applyAxisAngle(look, bank * 0.25);
     camera.lookAt(lookAt);
@@ -436,7 +499,8 @@ export function startScene(canvas) {
     telemetry.y = shipRig.position.y;
     telemetry.z = shipRig.position.z;
     drift.addScaledVector(look, -dt * (25 + warp * 160));
-    stars.update(camera, look, drift, warp * 70, ascii.gridSize);
+    // short streaks in the game, so the stars don't read as rocks
+    stars.update(camera, look, drift, playing ? Math.min(warp * 70, 14) : warp * 70, ascii.gridSize);
 
     // a clear pocket around the ship keeps it from blending into what's behind it
     shipScreen.copy(shipMiddle).project(camera);

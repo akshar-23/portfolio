@@ -8,6 +8,7 @@ import './styles/base.css';
 import './styles/hud.css';
 import './styles/sections.css';
 import './styles/project.css';
+import './styles/game.css';
 import { App } from './App.jsx';
 import { startScene } from './scene/index.js';
 

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { journey, useJourney } from '../journey.js';
 import { profile, sections, transmissions } from '../content/site.js';
 import { telemetry } from '../scene/telemetry.js';
+import { game } from '../game/state.js';
 
 const pad = (n, size = 2) => String(n).padStart(size, '0');
 const signed = (n) => `${n < 0 ? '−' : '+'}${pad(Math.abs(Math.round(n)), 3)}`;
@@ -68,6 +69,7 @@ export function Hud() {
             {[...transmissions, ...transmissions].map((line, i) => <span key={i}>{line}</span>)}
           </div>
         </div>
+        <button className="button hud__play" onClick={() => game.start()} title="Play (G)">▶ play</button>
         <a className="button" href={profile.resume} target="_blank" rel="noreferrer">resume ↗</a>
       </header>
 

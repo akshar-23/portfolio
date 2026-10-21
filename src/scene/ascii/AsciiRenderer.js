@@ -129,6 +129,8 @@ const fragmentShader = /* glsl */ `
   uniform sampler2D uMask; // 1 per cell under the page's content, soft at the edges
   uniform float uCalm; // how strongly the content clears the space behind it
   uniform vec3 uShip; // the ship on screen: x, y (device px), radius (px, 0 = none)
+  uniform float uShock; // 0 - 1: how much of the screen is scrambled
+  uniform vec3 uShockColor;
 
   float glyph(int set, int index, vec2 f) {
     vec2 uv = vec2(
@@ -330,6 +332,16 @@ const fragmentShader = /* glsl */ `
     }
     bloom *= 1.0 - under;
 
+    // hits and jumps: a burst of scrambled glyphs that dies down
+    if (uShock > 0.002) {
+      float flick = floor(uTime * 24.0);
+      if (hash12(cell + flick * 1.7) < uShock) {
+        ink = glyph(SET_VOID, int(hash12(cell * 1.31 + flick) * float(BANDS * SLOTS)), f);
+        color = uShockColor * (0.45 + 0.55 * hash12(cell + 9.1));
+        bloom = 0.4;
+      }
+    }
+
     // soft glow under bright glyphs, plus a warm haze where the sun shines
     float halo = bloom * 0.12 * (1.0 - smoothstep(0.0, 0.75, length(f - 0.5)));
     vec3 col = uBg + color * halo + uBright[SET_RAY] * ray * ray * 0.06;
@@ -408,9 +420,14 @@ export class AsciiRenderer {
       uPulses: { value: Array.from({ length: 4 }, () => new THREE.Vector4()) },
       uMask: { value: null },
       uShip: { value: new THREE.Vector3() },
+      uShock: { value: 0 },
+      uShockColor: { value: new THREE.Vector3(1, 1, 1) },
       uCalm: { value: 0 },
     };
     this.calmTarget = 0;
+    // in the game the rain and the rays step back, so rocks and rings are easy to read
+    this.focus = 0;
+    this.focusTarget = 0;
     this.nextPulse = 0;
 
     this.raysScene = createPass(this.raysUniforms, raysShader);
@@ -589,8 +606,22 @@ export class AsciiRenderer {
     u.set(x, y, Math.max(Math.hypot(ex - x, ey - y) * 1.35, this.cell.h * 3));
   }
 
+  // scramble up to strength (0 - 1) of the screen in a color, fading over half a second
+  shock(strength, color = '#dce8ff') {
+    const u = this.uniforms;
+    if (strength >= u.uShock.value) u.uShockColor.value.copy(toVec3(color));
+    u.uShock.value = Math.max(u.uShock.value, strength * this.motion);
+  }
+
+  setFocus(on) {
+    this.focusTarget = on ? 1 : 0;
+  }
+
   clearMask() {
     this.calmTarget = 0;
+    // in the game the rain and the rays step back, so rocks and rings are easy to read
+    this.focus = 0;
+    this.focusTarget = 0;
   }
 
   // a ring of brighter, scrambling glyphs spreading out from x, y (css px)
@@ -625,6 +656,10 @@ export class AsciiRenderer {
     u.uRainTime.value = this.rainTime;
     u.uReveal.value = 1 - Math.pow(1 - t, 3);
     u.uCalm.value += (this.calmTarget - u.uCalm.value) * (1 - Math.exp(-dt * 3));
+    u.uShock.value *= Math.exp(-dt * 4);
+    this.focus += (this.focusTarget - this.focus) * (1 - Math.exp(-dt * 3));
+    u.uRain.value = RAIN_STRENGTH * (1 - this.focus * 0.85);
+    u.uRayStrength.value = RAY_STRENGTH * (1 - this.focus * 0.65);
   }
 
   render(scene, camera) {

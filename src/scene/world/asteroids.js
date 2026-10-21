@@ -4,7 +4,7 @@ import { createAsciiMaterial } from '../ascii/materials.js';
 
 // Lumpy rock: an icosphere pushed in and out. The offset only depends on the vertex
 // position, so shared corners move together and the mesh stays closed.
-function createRockGeometry() {
+export function createRockGeometry() {
   const geometry = new THREE.IcosahedronGeometry(1, 2);
   const pos = geometry.attributes.position;
   const v = new THREE.Vector3();
@@ -60,5 +60,6 @@ export function createAsteroidField({ curve, from, to, count = 130, corridor = 1
   }
 
   update(0);
-  return { mesh, update };
+  // rocks: { position, scale } in world space, for things that collide with them
+  return { mesh, update, rocks };
 }
