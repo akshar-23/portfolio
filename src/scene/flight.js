@@ -47,7 +47,8 @@ export function createFlight({ points, stations, rolls = [] }) {
     const f = s - k;
     return {
       t: THREE.MathUtils.lerp(stationT[k], stationT[k + 1], f),
-      roll: (rolls[k] ?? 0) * Math.PI * 2 * THREE.MathUtils.smootherstep(f, 0, 1),
+      // rolls happen late in a flight, past where a section's steps park the ship
+      roll: (rolls[k] ?? 0) * Math.PI * 2 * THREE.MathUtils.smootherstep(f, 0.4, 1),
     };
   }
 

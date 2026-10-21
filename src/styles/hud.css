@@ -1,0 +1,273 @@
+/* The HUD: a frame of readouts over the whole screen, drawn on top of every section. */
+
+.hud {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.hud a,
+.hud button {
+  pointer-events: auto;
+}
+
+/* corner brackets */
+.hud__corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 0 solid var(--line-strong);
+}
+
+.hud__corner--tl { top: var(--hud-y); left: var(--hud-x); border-top-width: 1px; border-left-width: 1px; }
+.hud__corner--tr { top: var(--hud-y); right: var(--hud-x); border-top-width: 1px; border-right-width: 1px; }
+.hud__corner--bl { bottom: var(--hud-y); left: var(--hud-x); border-bottom-width: 1px; border-left-width: 1px; }
+.hud__corner--br { bottom: var(--hud-y); right: var(--hud-x); border-bottom-width: 1px; border-right-width: 1px; }
+
+/* top bar: brand, ticker, resume */
+.hud__top {
+  position: absolute;
+  top: calc(var(--hud-y) + 6px);
+  left: calc(var(--hud-x) + 28px);
+  right: calc(var(--hud-x) + 28px);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.hud__brand {
+  flex: none;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  font-stretch: 100%;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text);
+  text-decoration: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.hud__brand span {
+  color: var(--accent);
+  transition: color 0.6s;
+}
+
+.ticker {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+}
+
+.ticker__track {
+  display: inline-flex;
+  gap: 48px;
+  padding-right: 48px;
+  animation: ticker 60s linear infinite;
+}
+
+.ticker__track span::before {
+  content: '◆ ';
+  color: var(--accent);
+  transition: color 0.6s;
+}
+
+@keyframes ticker {
+  to { transform: translateX(-50%); }
+}
+
+.hud__top .button {
+  flex: none;
+  margin-left: auto;
+  padding: 7px 11px;
+}
+
+/* waypoint rail on the right edge */
+.rail {
+  position: absolute;
+  top: 50%;
+  right: calc(var(--hud-x) + 2px);
+  transform: translateY(-50%);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+}
+
+.rail__item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 5px 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.rail__label {
+  opacity: 0;
+  transform: translateX(6px);
+  transition: opacity 0.25s, transform 0.25s var(--ease);
+}
+
+.rail__mark {
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--text-faint);
+  transform: rotate(45deg);
+  transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+/* labels only on hover: the telemetry already names the current waypoint */
+.rail__item:hover .rail__label,
+.rail__item:focus-visible .rail__label {
+  opacity: 1;
+  transform: none;
+}
+
+.rail__item[aria-current='step'] {
+  color: var(--text);
+}
+
+.rail__item[aria-current='step'] .rail__mark {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+}
+
+/* telemetry, bottom left */
+.telemetry {
+  position: absolute;
+  left: calc(var(--hud-x) + 28px);
+  bottom: calc(var(--hud-y) + 4px);
+  display: grid;
+  gap: 4px;
+  line-height: 1.3;
+}
+
+.telemetry__row {
+  display: flex;
+  gap: 18px;
+}
+
+.telemetry b {
+  font-weight: 500;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.telemetry__waypoint {
+  color: var(--text);
+}
+
+.telemetry__waypoint i {
+  font-style: normal;
+  color: var(--accent);
+  transition: color 0.6s;
+}
+
+/* next waypoint, bottom right */
+.hud__next {
+  position: absolute;
+  right: calc(var(--hud-x) + 28px);
+  bottom: calc(var(--hud-y) + 4px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: var(--text-dim);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.hud__next:hover {
+  color: var(--accent);
+}
+
+.hud__next svg {
+  animation: nudge 2.4s var(--ease) infinite;
+}
+
+@keyframes nudge {
+  0%, 60%, 100% { transform: none; }
+  30% { transform: translateY(3px); }
+}
+
+/* steps inside a section: 02 / 04 with a bar */
+.steps {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.steps__bar {
+  width: 64px;
+  height: 1px;
+  background: var(--line-strong);
+  position: relative;
+}
+
+.steps__bar::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--progress);
+  background: var(--accent);
+  transition: width 0.6s var(--ease-out);
+}
+
+@media (max-width: 700px) {
+  .hud__top {
+    left: calc(var(--hud-x) + 4px);
+    right: calc(var(--hud-x) + 4px);
+    gap: 14px;
+  }
+
+  .ticker,
+  .telemetry__row--extra,
+  .rail__label {
+    display: none;
+  }
+
+  .rail {
+    right: calc(var(--hud-x) - 6px);
+  }
+
+  .telemetry {
+    left: calc(var(--hud-x) + 4px);
+  }
+
+  .hud__next {
+    right: calc(var(--hud-x) + 4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker__track,
+  .hud__next svg {
+    animation: none;
+  }
+}

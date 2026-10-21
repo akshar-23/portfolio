@@ -4,20 +4,25 @@
   box-sizing: border-box;
 }
 
+/* the page doesn't scroll: one section fills the screen at a time */
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 html {
   background: var(--ink);
   color: var(--text);
-  scroll-behavior: smooth;
-  scroll-padding-top: var(--nav-height);
   -webkit-text-size-adjust: 100%;
 }
 
 body {
   margin: 0;
   font-family: var(--font-body);
-  font-size: 17px;
-  line-height: 1.65;
-  overflow-x: hidden;
+  font-size: 15px;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -38,8 +43,10 @@ h2,
 h3,
 h4 {
   font-family: var(--font-display);
-  font-weight: 600;
-  line-height: 1.15;
+  font-weight: 700;
+  font-stretch: 100%;
+  line-height: 1.05;
+  text-transform: uppercase;
   margin: 0;
 }
 
@@ -76,27 +83,27 @@ video {
   white-space: nowrap;
 }
 
-/* mono labels: // like this */
+/* mono labels: // LIKE THIS */
 .label {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 500;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-faint);
 }
 
-/* [ button ] */
+/* [ BUTTON ] */
 .button {
   display: inline-flex;
   align-items: center;
   gap: 0.6em;
-  padding: 12px 18px;
+  padding: 10px 14px;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: lowercase;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   text-decoration: none;
   color: var(--text);
   background: rgba(8, 10, 20, 0.6);
@@ -170,26 +177,25 @@ video {
   -webkit-backdrop-filter: blur(8px) saturate(120%);
 }
 
-/* fade things in as they scroll into view */
+/* things inside a section arrive once the ship has, one after another (--i) */
 .reveal {
   opacity: 0;
-  transform: translateY(18px);
-  transition: opacity 0.9s var(--ease), transform 0.9s var(--ease);
+  transform: translateY(10px);
+  transition: opacity 0.35s var(--ease), transform 0.35s var(--ease);
 }
 
-.reveal.is-visible {
+[data-active='true'] .reveal {
   opacity: 1;
   transform: none;
+  transition: opacity 0.7s var(--ease-out), transform 0.9s var(--ease-out);
+  transition-delay: calc(0.45s + var(--i, 0) * 0.08s);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-
-  .reveal {
-    opacity: 1;
+  .reveal,
+  [data-active='true'] .reveal {
     transform: none;
-    transition: none;
+    transition-duration: 0.2s;
+    transition-delay: 0s;
   }
 }

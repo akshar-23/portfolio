@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { MDXProvider } from '@mdx-js/react';
 import { projects } from '../content/projects/index.js';
 import { sections } from '../content/site.js';
+import { journey } from '../journey.js';
 import { mdxComponents } from './media.jsx';
 
 const accent = sections.find((s) => s.id === 'projects').accent;
@@ -15,13 +16,8 @@ export function ProjectOverlay({ slug, openedHere }) {
   useEffect(() => {
     if (!project) return undefined;
     const opener = document.activeElement;
-    const root = document.documentElement;
-    root.style.overflow = 'hidden';
     closeButton.current?.focus();
-    return () => {
-      root.style.overflow = '';
-      opener?.focus?.({ preventScroll: true });
-    };
+    return () => opener?.focus?.({ preventScroll: true });
   }, [project]);
 
   const close = () => {
@@ -30,7 +26,7 @@ export function ProjectOverlay({ slug, openedHere }) {
     } else {
       history.replaceState(null, '', '#projects');
       window.dispatchEvent(new HashChangeEvent('hashchange'));
-      requestAnimationFrame(() => document.getElementById('projects')?.scrollIntoView());
+      journey.goTo('projects');
     }
   };
 

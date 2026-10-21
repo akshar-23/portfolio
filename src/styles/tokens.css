@@ -22,12 +22,18 @@
   /* each section sets its own */
   --accent: var(--rust);
 
-  --font-display: 'Martian Mono Variable', ui-monospace, 'SF Mono', Menlo, monospace;
-  --font-mono: 'Martian Mono Variable', ui-monospace, 'SF Mono', Menlo, monospace;
-  --font-body: 'Space Grotesk Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* change the headline font here */
+  --font-display: 'Tektur Variable', 'Arial Black', sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-body: 'Geist Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
-  --gutter: clamp(16px, 5vw, 72px);
-  --max: 1240px;
-  --nav-height: 64px;
+  /* the HUD frame: everything sits inside these insets */
+  --hud-x: clamp(16px, 3.2vw, 48px);
+  --hud-y: clamp(14px, 2.6vw, 34px);
+  --hud-top: calc(var(--hud-y) + 44px);
+  --hud-bottom: calc(var(--hud-y) + 64px);
+  --gutter: var(--hud-x);
+  --max: 1320px;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }

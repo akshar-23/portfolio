@@ -1,3 +1,5 @@
+import { featured } from './projects/index.js';
+
 // Everything the page says, outside of the project pages (those live in ./projects).
 
 export const profile = {
@@ -6,6 +8,11 @@ export const profile = {
   role: 'Software / Research Engineer',
   tagline: 'Gameplay systems, procedural content generation and constraint solving.',
   highlight: '3 peer-reviewed publications in PCG and constraint optimization',
+  stats: [
+    { value: '03', label: 'peer-reviewed papers' },
+    { value: '04', label: 'studios & labs' },
+    { value: '100–500×', label: 'faster level generation' },
+  ],
   location: 'San Francisco Bay Area, CA',
   now: 'Game Programming Intern @ E-Line Media',
   email: 'axr230102@gmail.com',
@@ -136,14 +143,23 @@ export const skills = [
   { group: 'foundations', items: ['Data Structures', 'Algorithms', 'Object-Oriented Design', 'State Machines', 'Multithreading'] },
 ];
 
-// The page sections, in order. Each one is a station on the ship's route through the
-// background, and takes the color of the object the ship passes there.
+// The page sections, in order. Each one is a waypoint on the ship's route through the
+// background, and takes the color of the object the ship passes there. steps: how many
+// screens the section pages through before moving on to the next waypoint.
 export const sections = [
   { id: 'top', label: 'home', accent: 'var(--rust)' },
   { id: 'about', label: 'about', accent: 'var(--teal)' },
-  { id: 'experience', label: 'experience', accent: 'var(--ember)' },
+  { id: 'experience', label: 'experience', accent: 'var(--ember)', steps: experience.length },
   { id: 'research', label: 'research', accent: 'var(--lilac)' },
-  { id: 'projects', label: 'projects', accent: 'var(--rose)' },
+  { id: 'projects', label: 'projects', accent: 'var(--rose)', steps: featured.length },
   { id: 'skills', label: 'skills', accent: 'var(--ice)' },
   { id: 'contact', label: 'contact', accent: 'var(--gold)' },
+];
+
+// Status lines in the HUD ticker.
+export const transmissions = [
+  `now › ${profile.now}`,
+  `research › ${profile.highlight}`,
+  `based › ${profile.location}`,
+  'focus › gameplay systems · procedural content generation · game ai',
 ];

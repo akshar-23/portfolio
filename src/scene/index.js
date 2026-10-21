@@ -11,9 +11,11 @@ import { createComet } from './world/comet.js';
 import { createStation } from './world/station.js';
 import { createGalaxy } from './world/galaxy.js';
 import { createNebula } from './world/nebula.js';
+import { journey } from '../journey.js';
+import { telemetry } from './telemetry.js';
 
-// One station per page section ([data-station] in the page, top to bottom): the ship
-// reaches a station as its section scrolls into view.
+// One station per page section (sections in content/site.js, in order): the ship flies
+// to a section's station when that section comes up.
 const ROUTE = {
   points: [
     [0, 0, 0], // hero
@@ -204,33 +206,19 @@ export function startScene(canvas) {
     }
   );
 
-  // scroll position -> progress along the route: station i is reached when section i
-  // is centered on screen (or, for tall sections, when its top reaches the top)
-  const stops = [];
-  function measureStations() {
-    const sections = document.querySelectorAll('[data-station]');
-    const max = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
-    stops.length = 0;
-    sections.forEach((section, i) => {
-      const top = section.getBoundingClientRect().top + window.scrollY;
-      const settle = top + Math.min(section.offsetHeight, window.innerHeight) / 2 - window.innerHeight / 2;
-      const stop = i === 0 ? 0 : i === sections.length - 1 ? max : THREE.MathUtils.clamp(settle, 0, max);
-      stops.push(Math.max(stop, (stops[i - 1] ?? -1) + 1));
-    });
-  }
-  measureStations();
-  new ResizeObserver(measureStations).observe(document.body);
-  document.fonts?.ready.then(measureStations);
-
-  function scrollProgress() {
-    if (stops.length < 2) return 0;
-    const y = window.scrollY;
-    let k = 0;
-    while (k < stops.length - 2 && y >= stops[k + 1]) k++;
-    const f = THREE.MathUtils.clamp((y - stops[k]) / (stops[k + 1] - stops[k]), 0, 1);
-    return (k + f) / (stops.length - 1);
-  }
-  const journey = { progress: scrollProgress() };
+  // flights between waypoints: ease out of one station and into the next, taking a
+  // little longer the further it is
+  const journeyState = { progress: journey.progress() };
+  const tween = { from: journeyState.progress, to: journeyState.progress, start: 0, duration: 1 };
+  const easeInOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2);
+  let clock = 0;
+  journey.subscribe(() => {
+    tween.from = journeyState.progress;
+    tween.to = journey.progress();
+    tween.start = clock;
+    const sections = Math.abs(tween.to - tween.from) * (flight.stations - 1);
+    tween.duration = 1.15 + Math.sqrt(sections) * 0.45;
+  });
 
   // lighting a letter of the name sends a ripple through the glyphs
   window.addEventListener('ascii:pulse', (event) => ascii.pulse(event.detail.x, event.detail.y));
@@ -276,10 +264,12 @@ export function startScene(canvas) {
     const ease = 1 - Math.exp(-dt * 3);
 
     world.update(time, dt);
-    journey.progress += (scrollProgress() - journey.progress) * (1 - Math.exp(-dt * 2.5));
+    clock = time;
+    const along = Math.min((time - tween.start) / tween.duration, 1);
+    journeyState.progress = tween.from + (tween.to - tween.from) * easeInOut(along);
 
     // the ship follows the route, drifts toward the cursor and banks into turns
-    const { t, roll } = flight.sample(journey.progress);
+    const { t, roll } = flight.sample(journeyState.progress);
     flight.frameAt(t, frame);
 
     const swayFrom = offset.x;
@@ -318,6 +308,13 @@ export function startScene(canvas) {
     lastShip.copy(shipRig.position);
     warp += (Math.min(speed / 60, 1) - warp) * (1 - Math.exp(-dt * 5));
     ascii.warp = warp;
+
+    telemetry.speed = speed;
+    telemetry.warp = warp;
+    telemetry.heading = THREE.MathUtils.radToDeg(Math.atan2(look.x, -look.z));
+    telemetry.x = shipRig.position.x;
+    telemetry.y = shipRig.position.y;
+    telemetry.z = shipRig.position.z;
     drift.addScaledVector(look, -dt * (25 + warp * 160));
     stars.update(camera, look, drift, warp * 70, ascii.gridSize);
 
