@@ -58,12 +58,17 @@ export function useJourney() {
   return useSyncExternalStore(journey.subscribe, journey.get);
 }
 
-// Wheel, touch and keyboard input. One gesture moves one step: after a move, input is
-// ignored until the transition is done and the trackpad's momentum has died down.
+// Wheel, touch and keyboard input. Each intent to scroll moves one step, and intents
+// that come in while a move is still playing are queued (one deep), so fast repeated
+// scrolling keeps moving instead of being swallowed. A trackpad's momentum isn't an
+// intent: its deltas only shrink. A new push shows up as a pause, a change of
+// direction or deltas rising again after they had been falling.
 // Content that doesn't fit its screen sits in a [data-scroll] box: it scrolls first,
 // and the next gesture past its end moves on.
-const SECTION_GAP = 900;
-const STEP_GAP = 450;
+const SECTION_GAP = 650;
+const STEP_GAP = 380;
+// a steady stream (a spinning mouse wheel, a finger held on the pad) repeats this often
+const REPEAT = 520;
 
 function scroller(target) {
   return target instanceof Element ? target.closest('[data-scroll]') : null;
@@ -77,38 +82,77 @@ function canScroll(box, down) {
 
 export function attachInput(target = window) {
   let lockedUntil = 0;
-  let lastWheel = 0;
-  let wheelSum = 0;
+  let pending = 0;
+  let timer = 0;
   let touch = null;
+  // the current wheel gesture
+  const wheel = { last: 0, dir: 0, prev: 0, peak: 0, decayed: false, sum: 0, fired: 0 };
 
-  const move = (forward) => {
+  const now = () => performance.now();
+
+  function move(forward) {
     const before = state.index;
     const moved = forward ? journey.next() : journey.prev();
-    if (moved) lockedUntil = performance.now() + (state.index === before ? STEP_GAP : SECTION_GAP);
-  };
+    if (moved) lockedUntil = now() + (state.index === before ? STEP_GAP : SECTION_GAP);
+  }
+
+  // queued moves: +n forward, -n back (up to 3); changing direction starts over
+  function drain() {
+    timer = 0;
+    if (!pending || locked) {
+      pending = 0;
+      return;
+    }
+    const forward = pending > 0;
+    pending -= Math.sign(pending);
+    move(forward);
+    if (pending) timer = setTimeout(drain, Math.max(lockedUntil - now(), 0));
+  }
+
+  // move now, or as soon as the moves before it are done
+  function request(forward) {
+    const dir = forward ? 1 : -1;
+    if (Math.sign(pending) !== dir) pending = 0;
+    if (!pending && now() >= lockedUntil) {
+      move(forward);
+      return;
+    }
+    pending = Math.max(-3, Math.min(3, pending + dir));
+    if (!timer) timer = setTimeout(drain, Math.max(lockedUntil - now(), 0));
+  }
 
   const onWheel = (event) => {
     if (locked || event.ctrlKey) return;
-    const now = performance.now();
-    const streaming = now - lastWheel < 150;
-    lastWheel = now;
-    if (canScroll(scroller(event.target), event.deltaY > 0)) {
-      // let the box scroll, and don't let its momentum spill into a move
-      lockedUntil = Math.max(lockedUntil, now + 250);
-      wheelSum = 0;
+    const t = now();
+    const dy = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? 400 : 1);
+    if (dy === 0) return;
+    if (canScroll(scroller(event.target), dy > 0)) {
+      // let the box scroll; its momentum shouldn't spill into a move
+      wheel.fired = t;
+      wheel.sum = 0;
       return;
     }
     event.preventDefault();
-    if (now < lockedUntil) {
-      // momentum keeps sending events after the fingers stop: wait for a pause
-      if (streaming) lockedUntil = Math.max(lockedUntil, now + 150);
-      wheelSum = 0;
-      return;
+
+    const dir = Math.sign(dy);
+    const size = Math.abs(dy);
+    const fresh = t - wheel.last > 200
+      || dir !== wheel.dir
+      || (wheel.decayed && size > wheel.prev * 1.4 + 2);
+    if (fresh) {
+      Object.assign(wheel, { dir, peak: size, decayed: false, sum: 0, fired: 0 });
+    } else {
+      wheel.peak = Math.max(wheel.peak, size);
+      if (size < wheel.peak * 0.55) wheel.decayed = true;
     }
-    wheelSum += event.deltaY;
-    if (Math.abs(wheelSum) > 24) {
-      move(wheelSum > 0);
-      wheelSum = 0;
+    wheel.last = t;
+    wheel.prev = size;
+    wheel.sum += dy;
+
+    const steady = wheel.fired && !wheel.decayed && t - wheel.fired > REPEAT;
+    if ((!wheel.fired && Math.abs(wheel.sum) > 20) || steady) {
+      wheel.fired = t;
+      request(dir > 0);
     }
   };
 
@@ -120,7 +164,8 @@ export function attachInput(target = window) {
     else if (event.key === 'End') journey.goTo(sections.length - 1);
     else if (forward || back) {
       event.preventDefault();
-      if (performance.now() >= lockedUntil) move(forward);
+      // held keys repeat on their own; don't let them pile up behind a move
+      if (!event.repeat || now() >= lockedUntil) request(forward);
     }
   };
 
@@ -138,7 +183,7 @@ export function attachInput(target = window) {
     const dy = touch.y - event.changedTouches[0].clientY;
     const scrolled = touch.box && touch.box.scrollTop !== touch.top;
     touch = null;
-    if (!scrolled && Math.abs(dy) > 50 && performance.now() >= lockedUntil) move(dy > 0);
+    if (!scrolled && Math.abs(dy) > 50) request(dy > 0);
   };
 
   target.addEventListener('wheel', onWheel, { passive: false });

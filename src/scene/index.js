@@ -11,6 +11,7 @@ import { createComet } from './world/comet.js';
 import { createStation } from './world/station.js';
 import { createGalaxy } from './world/galaxy.js';
 import { createNebula } from './world/nebula.js';
+import { createExhaust } from './world/exhaust.js';
 import { journey } from '../journey.js';
 import { telemetry } from './telemetry.js';
 import { layout, measureLayout } from './layout.js';
@@ -52,10 +53,17 @@ function buildWorld(scene, flight) {
   const spinning = [];
   const updates = [];
 
+  // big things the ship should stay clear of on screen
+  const obstacles = [];
+
   function add(object, position, spin) {
     object.position.copy(position);
     scene.add(object);
     if (spin) spinning.push([object, spin]);
+    if (object.isMesh || object.isGroup) {
+      const sphere = new THREE.Box3().setFromObject(object).getBoundingSphere(new THREE.Sphere());
+      if (Number.isFinite(sphere.radius) && sphere.radius < 400) obstacles.push(sphere);
+    }
     return object;
   }
 
@@ -143,6 +151,7 @@ function buildWorld(scene, flight) {
   return {
     sun,
     sunRadius,
+    obstacles,
     update(time, dt) {
       for (const [object, [x, y, z]] of spinning) {
         object.rotation.x += x * dt;
@@ -187,6 +196,13 @@ export function startScene(canvas) {
   // ship
   const shipRig = new THREE.Group();
   scene.add(shipRig);
+  const nozzles = [];
+  let shipSize = 6;
+  // the middle of the ship model, in the rig's space (it isn't at the rig's origin)
+  const shipCenter = new THREE.Vector3();
+  const shipMiddle = new THREE.Vector3();
+  const exhaust = createExhaust();
+  scene.add(exhaust.points);
 
   new GLTFLoader().load(
     `${import.meta.env.BASE_URL}models/scene.gltf`,
@@ -201,6 +217,17 @@ export function startScene(canvas) {
         child.material = createAsciiMaterial({ ...look, side: THREE.DoubleSide });
       });
       shipRig.add(ship);
+      // nozzles at the back of the ship, in the rig's space (+z is backwards)
+      shipRig.updateMatrixWorld(true);
+      const box = new THREE.Box3().setFromObject(ship).applyMatrix4(shipRig.matrixWorld.clone().invert());
+      const size = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+      nozzles.push(
+        new THREE.Vector3(center.x - size.x * 0.12, center.y, box.max.z - size.z * 0.05),
+        new THREE.Vector3(center.x + size.x * 0.12, center.y, box.max.z - size.z * 0.05)
+      );
+      shipSize = Math.max(size.x, size.z);
+      shipCenter.copy(center);
     },
     undefined,
     function (error) {
@@ -227,14 +254,48 @@ export function startScene(canvas) {
 
   // where the content is: measured after React has drawn the new section, and again once
   // it has settled in
-  function relayout() {
-    measureLayout();
-    ascii.setBlocks(layout.blocks);
+  // the planets as seen from a station's camera, as boxes in css px
+  const viewCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 4000);
+  const probe = new THREE.Vector3();
+  function obstaclesAt(station) {
+    const view = flight.views[station];
+    viewCamera.aspect = ascii.aspect;
+    viewCamera.updateProjectionMatrix();
+    viewCamera.position.copy(view.position);
+    viewCamera.up.copy(view.up);
+    viewCamera.lookAt(probe.copy(view.position).add(view.forward));
+    viewCamera.updateMatrixWorld();
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const focal = h / 2 / Math.tan(THREE.MathUtils.degToRad(viewCamera.fov) / 2);
+    const boxes = [];
+    for (const sphere of world.obstacles) {
+      probe.copy(sphere.center).applyMatrix4(viewCamera.matrixWorldInverse);
+      if (probe.z > -1) continue;
+      const r = (sphere.radius / -probe.z) * focal * 0.8;
+      // far-off things are small enough to fly in front of
+      if (r < 24) continue;
+      probe.copy(sphere.center).project(viewCamera);
+      const x = (probe.x * 0.5 + 0.5) * w;
+      const y = (0.5 - probe.y * 0.5) * h;
+      if (x + r < 0 || x - r > w || y + r < 0 || y - r > h) continue;
+      boxes.push({ left: x - r, top: y - r, right: x + r, bottom: y + r });
+    }
+    return boxes;
   }
+
+  const place = () => measureLayout(obstaclesAt(journey.get().index));
+  function relayout() {
+    place();
+    ascii.setMask(layout.shapes);
+  }
+  // the ship re-aims right away; the holes swap once the old ones have faded and the new
+  // content starts to arrive
   journey.subscribe(() => {
-    ascii.setBlocks([]);
-    requestAnimationFrame(() => requestAnimationFrame(relayout));
-    setTimeout(relayout, 900);
+    ascii.clearMask();
+    requestAnimationFrame(() => requestAnimationFrame(place));
+    setTimeout(relayout, 450);
+    setTimeout(relayout, 1100);
   });
   window.addEventListener('resize', () => requestAnimationFrame(relayout));
   document.fonts?.ready.then(relayout);
@@ -268,6 +329,10 @@ export function startScene(canvas) {
   const backward = new THREE.Vector3();
   const rollAxis = new THREE.Vector3(0, 0, 1);
   const rollQuat = new THREE.Quaternion();
+  const yawQuat = new THREE.Quaternion();
+  const idleTurn = new THREE.Euler();
+  const shipScreen = new THREE.Vector3();
+  const shipEdge = new THREE.Vector3();
   const chase = new THREE.Vector3();
   const aim = new THREE.Vector3();
   const look = new THREE.Vector3();
@@ -301,11 +366,8 @@ export function startScene(canvas) {
       (layout.free.x / window.innerWidth) * 2 - 1 + cursor.x * 0.12,
       1 - (layout.free.y / window.innerHeight) * 2 - cursor.y * 0.1
     );
-    // where it is on screen now: steer the offset until the two meet
-    onScreen.copy(frame.position)
-      .addScaledVector(frame.right, offset.x)
-      .addScaledVector(frame.up, offset.y)
-      .project(camera);
+    // where the ship's middle is on screen now: steer the offset until the two meet
+    onScreen.copy(shipMiddle).project(camera);
     // (only once the camera is in place: before that the projection is meaningless)
     if (started && Number.isFinite(onScreen.x) && Number.isFinite(onScreen.y) && onScreen.z < 1) {
       const reach = 1 - Math.exp(-dt * 2.2);
@@ -321,11 +383,20 @@ export function startScene(canvas) {
     const turn = -flight.turnAt(t) * 0.35 * warp - sway * 0.03;
     bank += (THREE.MathUtils.clamp(turn, -0.7, 0.7) - bank) * ease;
 
+    // when parked it doesn't sit still: it hovers, sways and noses around a little
+    const idle = 1 - warp;
+    const hover = Math.sin(time * 1.7) * 0.45 * idle;
+    const sideDrift = Math.sin(time * 0.55) * 0.9 * idle;
     shipRig.position.copy(frame.position)
-      .addScaledVector(frame.right, lateral)
-      .addScaledVector(frame.up, offset.y);
+      .addScaledVector(frame.right, lateral + sideDrift)
+      .addScaledVector(frame.up, offset.y + hover);
     basis.makeBasis(frame.right, frame.up, backward.copy(frame.forward).negate());
-    shipRig.quaternion.setFromRotationMatrix(basis).multiply(rollQuat.setFromAxisAngle(rollAxis, bank + roll));
+    shipRig.quaternion.setFromRotationMatrix(basis)
+      .multiply(rollQuat.setFromAxisAngle(rollAxis, bank + roll + Math.sin(time * 0.9) * 0.1 * idle))
+      .multiply(yawQuat.setFromEuler(idleTurn.set(Math.sin(time * 1.3) * 0.05 * idle, Math.sin(time * 0.7) * 0.08 * idle, 0)));
+    shipRig.updateMatrixWorld();
+    shipMiddle.copy(shipCenter).applyMatrix4(shipRig.matrixWorld);
+    exhaust.update(dt, shipRig, nozzles, warp);
 
     // the chase camera lags a little, so it swings out in the turns, but it always
     // looks just ahead of the ship so the ship stays in frame
@@ -358,6 +429,11 @@ export function startScene(canvas) {
     telemetry.z = shipRig.position.z;
     drift.addScaledVector(look, -dt * (25 + warp * 160));
     stars.update(camera, look, drift, warp * 70, ascii.gridSize);
+
+    // a clear pocket around the ship keeps it from blending into what's behind it
+    shipScreen.copy(shipMiddle).project(camera);
+    shipEdge.copy(shipMiddle).addScaledVector(frame.right, shipSize * 0.6).project(camera);
+    ascii.setShip(shipScreen, shipEdge, shipScreen.z < 1 && nozzles.length > 0);
 
     updateSceneUniforms(camera, time, world.sun.position);
     ascii.setSun(world.sun.position, world.sunRadius, camera);

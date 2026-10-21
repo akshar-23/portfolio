@@ -9,7 +9,7 @@ function Feed({ groups, side }) {
     ...group.items.map((item) => ({ key: `${group.group}-${item}`, text: item })),
   ]);
   return (
-    <div className={`skill-feed skill-feed--${side} reveal`} style={{ '--i': side === 'left' ? 1 : 2 }} data-block data-scroll>
+    <div className={`skill-feed skill-feed--${side} reveal`} style={{ '--i': side === 'left' ? 1 : 2 }} data-block data-scroll data-mask="box">
       <ul className="skill-feed__track">
         {[...rows, ...rows].map((row, i) => (
           <li key={`${row.key}-${i}`} className={row.head ? 'skill-feed__head' : undefined} aria-hidden={i >= rows.length || undefined}>

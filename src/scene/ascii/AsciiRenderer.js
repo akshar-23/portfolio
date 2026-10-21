@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import fontUrl from '../../../fonts/ChivoMono-VariableFont_wght.ttf';
-import { MAX_BLOCKS } from '../layout.js';
 import {
   BACKGROUND, BANDS, CELL, DUST, FIRST_SOLID, FONT, GLYPH_SETS, RAIN_HEAD, RAIN_STRENGTH, RAY_STRENGTH, SET, SLOTS,
 } from './palette.js';
@@ -126,21 +125,9 @@ const fragmentShader = /* glsl */ `
   uniform vec3 uBright[NSETS];
   uniform vec4 uParams[NSETS]; // jitter, scramble, gamma, grain
   uniform vec4 uPulses[4]; // x, y (device px), start time, on
-  uniform vec4 uBlocks[${MAX_BLOCKS}]; // page content, device px: left, bottom, right, top
-  uniform int uBlockCount;
-  uniform float uCalm; // how much the glyphs under the content quiet down
-
-  // 1 under the page's content, fading out over a few cells around it
-  float underContent(vec2 p) {
-    float under = 0.0;
-    for (int i = 0; i < ${MAX_BLOCKS}; i++) {
-      if (i >= uBlockCount) break;
-      vec4 b = uBlocks[i];
-      vec2 d = max(max(b.xy - p, p - b.zw), 0.0);
-      under = max(under, 1.0 - smoothstep(0.0, uCell.y * 3.0, length(d)));
-    }
-    return under * uCalm;
-  }
+  uniform sampler2D uMask; // 1 per cell under the page's content, soft at the edges
+  uniform float uCalm; // how strongly the content clears the space behind it
+  uniform vec3 uShip; // the ship on screen: x, y (device px), radius (px, 0 = none)
 
   float glyph(int set, int index, vec2 f) {
     vec2 uv = vec2(
@@ -238,12 +225,12 @@ const fragmentShader = /* glsl */ `
     float head = drop.y * uRain;
     float ray = texelFetch(uRays, ivec2(cell), 0).r * uRayStrength * uReveal;
 
-    // under the page's content the scene steps back: less rain, softer rays, dimmer glyphs
-    float under = underContent(center);
-    trail *= 1.0 - under * 0.85;
+    // the page's content clears a hole in the scene: most glyphs drop out behind it
+    float under = texture2D(uMask, center / uRes).r * uCalm;
+    trail *= 1.0 - under;
     head *= 1.0 - under;
-    ray *= 1.0 - under * 0.6;
-    lantern *= 1.0 - under * 0.7;
+    ray *= 1.0 - under * 0.85;
+    lantern *= 1.0 - under;
 
     vec3 color = vec3(0.0);
     float ink = 0.0;
@@ -323,8 +310,24 @@ const fragmentShader = /* glsl */ `
       }
     }
 
-    color *= 1.0 - under * (set == SET_SHIP ? 0.35 : 0.68);
-    bloom *= 1.0 - under * 0.8;
+    if (set != SET_SHIP) {
+      // a few faint glyphs stay, so it reads as thinned-out space and not a dark box
+      if (hash12(cell + 7.31) < under * 0.92) ink = 0.0;
+      color *= 1.0 - under * 0.55;
+
+      // and the same kind of pocket around the ship, so it stands out from what's behind
+      if (uShip.z > 0.0) {
+        vec2 d = (center - uShip.xy) / vec2(uShip.z, uShip.z * 0.8);
+        float pocket = 1.0 - smoothstep(0.75, 1.15, length(d));
+        if (set != SET_EMBER && hash12(cell + 3.7) < pocket * 0.85) ink = 0.0;
+        color *= 1.0 - pocket * 0.5;
+      }
+    } else if (outline) {
+      // a crisp, cool edge around the ship's silhouette
+      color = mix(color, uHead, 0.7);
+      bloom = max(bloom, 0.6);
+    }
+    bloom *= 1.0 - under;
 
     // soft glow under bright glyphs, plus a warm haze where the sun shines
     float halo = bloom * 0.12 * (1.0 - smoothstep(0.0, 0.75, length(f - 0.5)));
@@ -402,8 +405,8 @@ export class AsciiRenderer {
       uBright: { value: GLYPH_SETS.map((s) => toVec3(s.bright)) },
       uParams: { value: GLYPH_SETS.map((s) => new THREE.Vector4(s.jitter, s.scramble, s.gamma, s.grain)) },
       uPulses: { value: Array.from({ length: 4 }, () => new THREE.Vector4()) },
-      uBlocks: { value: Array.from({ length: MAX_BLOCKS }, () => new THREE.Vector4()) },
-      uBlockCount: { value: 0 },
+      uMask: { value: null },
+      uShip: { value: new THREE.Vector3() },
       uCalm: { value: 0 },
     };
     this.calmTarget = 0;
@@ -514,19 +517,75 @@ export class AsciiRenderer {
     this.uniforms.uMouse.value.set(-1e5, -1e5);
   }
 
-  // the page content's boxes (css px); the glyphs under them quiet down
-  setBlocks(blocks) {
-    const u = this.uniforms;
-    blocks.forEach((box, i) => {
-      u.uBlocks.value[i].set(
-        box.left * this.dpr,
-        this.size.y - box.bottom * this.dpr,
-        box.right * this.dpr,
-        this.size.y - box.top * this.dpr
-      );
-    });
-    u.uBlockCount.value = blocks.length;
-    this.calmTarget = blocks.length ? 1 : 0;
+  // The page content's shapes (css px) as a mask with one texel per cell. Cells under
+  // a shape are 1, with a soft falloff of about a cell around it.
+  setMask(shapes) {
+    const cols = this.uniforms.uGrid.value.x;
+    const rows = this.uniforms.uGrid.value.y;
+    const sx = cols / window.innerWidth;
+    const sy = rows / window.innerHeight;
+    let mask = new Float32Array(cols * rows);
+    for (const box of shapes) {
+      const x0 = Math.max(0, Math.round(box.left * sx - 0.6));
+      const x1 = Math.min(cols, Math.round(box.right * sx + 0.6));
+      const y0 = Math.max(0, Math.round(box.top * sy - 0.35));
+      const y1 = Math.min(rows, Math.round(box.bottom * sy + 0.35));
+      for (let y = y0; y < y1; y++) {
+        // texture rows go bottom up
+        const row = (rows - 1 - y) * cols;
+        for (let x = x0; x < x1; x++) mask[row + x] = 1;
+      }
+    }
+    // two passes of a 3x3 box blur soften the edges
+    for (let pass = 0; pass < 2; pass++) {
+      const out = new Float32Array(cols * rows);
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          let sum = 0;
+          let n = 0;
+          for (let dy = -1; dy <= 1; dy++) {
+            const yy = y + dy;
+            if (yy < 0 || yy >= rows) continue;
+            for (let dx = -1; dx <= 1; dx++) {
+              const xx = x + dx;
+              if (xx < 0 || xx >= cols) continue;
+              sum += mask[yy * cols + xx];
+              n++;
+            }
+          }
+          out[y * cols + x] = Math.max(mask[y * cols + x] * 0.85, sum / n);
+        }
+      }
+      mask = out;
+    }
+    const data = new Uint8Array(cols * rows);
+    for (let i = 0; i < data.length; i++) data[i] = Math.min(255, mask[i] * 255);
+
+    const texture = new THREE.DataTexture(data, cols, rows, THREE.RedFormat, THREE.UnsignedByteType);
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.needsUpdate = true;
+    this.uniforms.uMask.value?.dispose();
+    this.uniforms.uMask.value = texture;
+    this.calmTarget = shapes.length ? 1 : 0;
+  }
+
+  // the ship's centre and a point on its edge, in ndc; on: whether it's on screen
+  setShip(center, edge, on) {
+    const u = this.uniforms.uShip.value;
+    if (!on) {
+      u.z = 0;
+      return;
+    }
+    const x = (center.x * 0.5 + 0.5) * this.size.x;
+    const y = (center.y * 0.5 + 0.5) * this.size.y;
+    const ex = (edge.x * 0.5 + 0.5) * this.size.x;
+    const ey = (edge.y * 0.5 + 0.5) * this.size.y;
+    u.set(x, y, Math.max(Math.hypot(ex - x, ey - y) * 1.35, this.cell.h * 3));
+  }
+
+  clearMask() {
+    this.calmTarget = 0;
   }
 
   // a ring of brighter, scrambling glyphs spreading out from x, y (css px)

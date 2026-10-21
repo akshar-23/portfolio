@@ -159,7 +159,7 @@ export const GLYPH_SETS = [
   {
     name: 'ship',
     bands: [' ', '.', ':', '-=', '+*', '#%', '%&#', '@'],
-    dark: '#3a4256', bright: '#ffffff',
+    dark: '#56627e', bright: '#ffffff',
     jitter: 0.5, scramble: 0, gamma: 0.75, grain: 0.15,
   },
 ];
