@@ -7,7 +7,7 @@ export function Hero() {
   return (
     <Screen id="top" className="hero">
       <div className="hero__inner">
-        <div className="hero__content" data-block data-scroll>
+        <div className="hero__content" data-block data-fit>
           <p className="label hero__role reveal" style={{ '--i': 0 }}>{profile.role}</p>
           <div className="reveal" style={{ '--i': 1 }}>
             <NameTiles words={[profile.firstName, profile.lastName]} />

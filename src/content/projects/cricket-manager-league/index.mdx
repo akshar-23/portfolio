@@ -1,4 +1,10 @@
-import cover from './cover.png';
+import cover from './cover.jpg';
+import shot1 from './shot-1.jpg';
+import shot2 from './shot-2.jpg';
+import shot3 from './shot-3.jpg';
+import shot4 from './shot-4.jpg';
+import shot5 from './shot-5.jpg';
+import shot6 from './shot-6.jpg';
 
 export const meta = {
   title: 'Cricket Manager: League',
@@ -8,11 +14,19 @@ export const meta = {
   featured: true,
   order: 2,
   cover,
-  // TODO: add the Play Store link
-  links: [{ label: 'Google Play', url: null }],
+  links: [{ label: 'Google Play', url: 'https://play.google.com/store/apps/details?id=com.arcadongames.cricketmanager' }],
 };
 
 - Built core gameplay mechanics, state machines and the interactive player systems in Unity / C#.
 - Connected the game to Firebase Realtime Database and Cloud Functions for inventory and pseudo-multiplayer, syncing **1,000+ profiles** with sub-100 ms responses.
 - Wrote a match simulation that runs **30 matches a minute**, and cut load times by 40%.
 - Alpha-tested with 100+ players over three versions: **85% satisfaction** and 40% fewer bug reports.
+
+<Gallery ratio="600 / 1317" images={[
+  { src: shot1, alt: 'Squad screen' },
+  { src: shot2, alt: 'Player collection' },
+  { src: shot3, alt: 'Training' },
+  { src: shot4, alt: 'Match day' },
+  { src: shot5, alt: 'Leagues' },
+  { src: shot6, alt: 'Leaderboard' },
+]} />

@@ -8,7 +8,7 @@ export function Experience() {
   const job = experience[step];
   return (
     <Screen id="experience" className="experience">
-      <div className="col" data-scroll data-block>
+      <div className="col" data-fit data-block>
         <SectionHead id="experience" title="Experience" />
         <StepLog
           id="experience"

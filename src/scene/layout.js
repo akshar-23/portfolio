@@ -97,6 +97,18 @@ function measureShapes(roots) {
   return shapes;
 }
 
+// The HUD's readouts clear the space behind them too, so they read over the scene.
+const HUD_PARTS = '.hud__brand, .ticker, .hud__top .button, .game-score, .telemetry__row, .hud__next, .rail__item, .game-center > *';
+
+export function measureHud() {
+  const shapes = [];
+  document.querySelectorAll(`.hud :is(${HUD_PARTS})`).forEach((el) => {
+    const box = el.getBoundingClientRect();
+    if (box.width > 1 && box.height > 1) shapes.push({ left: box.left, top: box.top, right: box.right, bottom: box.bottom });
+  });
+  return shapes;
+}
+
 // circles: planets in view (css px), which the ship keeps clear of where it can
 export function measureLayout(circles = []) {
   const elements = document.querySelectorAll('.section[data-active="true"] [data-block]');
@@ -108,7 +120,7 @@ export function measureLayout(circles = []) {
     if (blocks.length === MAX_BLOCKS) break;
   }
   layout.blocks = blocks;
-  layout.shapes = measureShapes(elements);
+  layout.shapes = [...measureShapes(elements), ...measureHud()];
   layout.free = findFree(blocks, circles, hudInsets());
   return layout;
 }

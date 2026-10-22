@@ -25,9 +25,9 @@ export function Screen({ id, className = '', children }) {
 }
 
 export function useActive(id) {
-  const { index, step } = useJourney();
+  const { index, step, compact, short } = useJourney();
   const active = sections[index].id === id;
-  return { active, step: active ? step : 0 };
+  return { active, step: active ? step : 0, compact, short };
 }
 
 // WPT 02 / 06 over a scrambling title

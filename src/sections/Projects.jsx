@@ -14,7 +14,7 @@ export function Projects() {
   const links = (project.links ?? []).filter((link) => link.url);
   return (
     <Screen id="projects" className="projects">
-      <div className="col" data-scroll data-block>
+      <div className="col" data-fit data-block>
         <SectionHead id="projects" title="Projects" />
         <StepLog
           id="projects"

@@ -7,7 +7,7 @@ export function Contact() {
 
   return (
     <Screen id="contact" className="contact">
-      <div className="col" data-scroll data-block>
+      <div className="col" data-fit data-block>
         <SectionHead id="contact" title="Open a channel" />
         <p className="contact__lead reveal" style={{ '--i': 1 }}>
           Working on games, tools or research where this could fit? Send a transmission, I read everything.

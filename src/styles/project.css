@@ -186,6 +186,14 @@
   cursor: zoom-in;
 }
 
+.gallery--tall {
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+}
+
+.gallery--tall button {
+  aspect-ratio: var(--ratio);
+}
+
 .gallery img {
   width: 100%;
   height: 100%;

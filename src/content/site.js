@@ -142,12 +142,13 @@ export const skills = [
 
 // The page sections, in order. Each one is a waypoint on the ship's route through the
 // background, and takes the color of the object the ship passes there. steps: how many
-// screens the section pages through before moving on to the next waypoint.
+// screens the section pages through before moving on to the next waypoint (or a
+// function of the screen, { compact, short }, for sections that only page when small).
 export const sections = [
   { id: 'top', label: 'home', accent: 'var(--rust)' },
-  { id: 'about', label: 'about', accent: 'var(--teal)' },
+  { id: 'about', label: 'about', accent: 'var(--teal)', steps: ({ compact, short }) => (compact || short ? 2 : 1) },
   { id: 'experience', label: 'experience', accent: 'var(--ember)', steps: experience.length },
-  { id: 'research', label: 'research', accent: 'var(--lilac)' },
+  { id: 'research', label: 'research', accent: 'var(--lilac)', steps: ({ compact }) => (compact ? research.papers.length : 1) },
   { id: 'projects', label: 'projects', accent: 'var(--rose)', steps: featured.length },
   { id: 'skills', label: 'skills', accent: 'var(--ice)' },
   { id: 'contact', label: 'contact', accent: 'var(--gold)' },

@@ -45,10 +45,15 @@ main,
   zoom: var(--ui-zoom, 1);
 }
 
-/* a box with more to scroll fades out at the bottom */
-[data-overflow='more'] {
-  mask-image: linear-gradient(to bottom, #000 calc(100% - 64px), transparent);
-  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 64px), transparent);
+/* content is fitted to its room (src/fit.js), so it never scrolls, except as a last
+   resort on phones held sideways */
+[data-fit] {
+  overflow: hidden;
+  scrollbar-width: none;
+}
+
+[data-fit][data-fit-scroll='true'] {
+  overflow-y: auto;
 }
 
 h1,

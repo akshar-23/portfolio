@@ -6,6 +6,7 @@ import { ProjectOverlay } from './components/ProjectOverlay.jsx';
 import { sections } from './content/site.js';
 import { attachInput, journey } from './journey.js';
 import { uiScale } from './scale.js';
+import { fitContent } from './fit.js';
 import { About } from './sections/About.jsx';
 import { Contact } from './sections/Contact.jsx';
 import { Experience } from './sections/Experience.jsx';
@@ -67,27 +68,25 @@ export function App() {
     return () => window.removeEventListener('keydown', keys);
   }, [playing]);
 
-  // the interface scale for big screens, and a fade on boxes with more to scroll
+  // the interface scale for big screens, and content fitted to the room it has
   useEffect(() => {
     const root = document.documentElement;
-    const hints = () => {
+    const refit = () => {
       root.style.setProperty('--ui-zoom', uiScale());
-      document.querySelectorAll('[data-scroll]').forEach((box) => {
-        const scrolls = /(auto|scroll)/.test(getComputedStyle(box).overflowY) && box.scrollHeight > box.clientHeight + 1;
-        const more = scrolls && box.scrollTop + box.clientHeight < box.scrollHeight - 4;
-        box.dataset.overflow = more ? 'more' : 'none';
-      });
+      fitContent();
     };
-    hints();
-    const later = () => setTimeout(hints, 60);
+    // after React has drawn the new step, and again once the scrambling titles settle
+    const later = () => {
+      requestAnimationFrame(refit);
+      setTimeout(refit, 1400);
+    };
+    refit();
     const unsubscribe = journey.subscribe(later);
-    window.addEventListener('resize', hints);
-    document.addEventListener('scroll', hints, true);
-    document.fonts?.ready.then(hints);
+    window.addEventListener('resize', refit);
+    document.fonts?.ready.then(refit);
     return () => {
       unsubscribe();
-      window.removeEventListener('resize', hints);
-      document.removeEventListener('scroll', hints, true);
+      window.removeEventListener('resize', refit);
     };
   }, []);
 

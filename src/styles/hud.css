@@ -9,7 +9,8 @@
   font-size: 10.5px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-faint);
+  color: var(--text-dim);
+  text-shadow: 0 0 10px var(--ink), 0 0 3px var(--ink);
 }
 
 .hud a,
@@ -132,7 +133,7 @@
 .rail__mark {
   width: 6px;
   height: 6px;
-  border: 1px solid var(--text-faint);
+  border: 1px solid var(--text-dim);
   transform: rotate(45deg);
   transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
 }
@@ -171,7 +172,7 @@
 
 .telemetry b {
   font-weight: 500;
-  color: var(--text-dim);
+  color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 

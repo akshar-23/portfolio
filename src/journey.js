@@ -5,21 +5,41 @@ import { sections } from './content/site.js';
 // one step at a time. The page doesn't scroll; the wheel, swipes, keys and the
 // waypoint rail move this, and both the content and the ship follow it.
 
-let state = { index: 0, step: 0, direction: 1 };
+// Small screens page some sections in more steps, so their content never has to shrink
+// past readable: compact is phones and anything very short, short is laptop-sized
+// screens without much height.
+const COMPACT = window.matchMedia('(max-width: 700px), (max-height: 520px)');
+const SHORT = window.matchMedia('(max-height: 760px)');
+const screen = () => ({ compact: COMPACT.matches, short: SHORT.matches });
+
+let state = { index: 0, step: 0, direction: 1, ...screen() };
 let locked = false;
 const listeners = new Set();
 
-const stepsOf = (index) => sections[index].steps ?? 1;
+// a section's steps: a number, or a function of the screen ({ compact, short })
+export function stepsOf(index, size = state) {
+  const steps = sections[index].steps ?? 1;
+  return typeof steps === 'function' ? steps(size) : steps;
+}
 
 function set(index, step) {
   index = Math.max(0, Math.min(sections.length - 1, index));
   step = Math.max(0, Math.min(stepsOf(index) - 1, step));
   if (index === state.index && step === state.step) return false;
   const direction = index > state.index || (index === state.index && step > state.step) ? 1 : -1;
-  state = { index, step, direction };
+  state = { ...state, index, step, direction };
   listeners.forEach((listener) => listener());
   return true;
 }
+
+function onScreenChange() {
+  const size = screen();
+  const step = Math.min(state.step, stepsOf(state.index, size) - 1);
+  state = { ...state, ...size, step };
+  listeners.forEach((listener) => listener());
+}
+COMPACT.addEventListener('change', onScreenChange);
+SHORT.addEventListener('change', onScreenChange);
 
 export const journey = {
   get: () => state,
@@ -71,7 +91,7 @@ const STEP_GAP = 380;
 const REPEAT = 520;
 
 function scroller(target) {
-  return target instanceof Element ? target.closest('[data-scroll]') : null;
+  return target instanceof Element ? target.closest('[data-scroll], [data-fit]') : null;
 }
 
 // can this box still scroll that way?

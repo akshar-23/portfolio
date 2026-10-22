@@ -35,7 +35,8 @@ export function Video({ src, poster, youtube, vimeo, caption, ratio = '16 / 9', 
 }
 
 // <Gallery images={[{ src: shot1, alt: 'Main menu' }, ...]} />
-export function Gallery({ images = [], caption }) {
+// ratio: the shape of the thumbnails, like '9 / 19' for phone screenshots
+export function Gallery({ images = [], caption, ratio }) {
   const [open, setOpen] = useState(null);
 
   useEffect(() => {
@@ -51,7 +52,7 @@ export function Gallery({ images = [], caption }) {
 
   return (
     <figure className="media">
-      <div className="gallery">
+      <div className={`gallery${ratio ? ' gallery--tall' : ''}`} style={ratio ? { '--ratio': ratio } : undefined}>
         {images.map((image, i) => (
           <button key={image.src} onClick={() => setOpen(i)} aria-label={`Enlarge ${image.alt ?? `image ${i + 1}`}`}>
             <img src={image.src} alt={image.alt ?? ''} loading="lazy" />

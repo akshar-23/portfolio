@@ -1,4 +1,7 @@
-import cover from './cover.png';
+import cover from './cover.jpg';
+import shot1 from './shot-1.jpg';
+import shot2 from './shot-2.jpg';
+import shot3 from './shot-3.jpg';
 
 export const meta = {
   title: 'Smil-E-Mart',
@@ -6,7 +9,7 @@ export const meta = {
   role: 'Game designer & developer',
   tags: ['Narrative', 'Simulation'],
   featured: true,
-  order: 5,
+  order: 6,
   cover,
   links: [{ label: 'itch.io', url: 'https://lightnin7.itch.io/smil-e-mart' }],
 };
@@ -15,3 +18,9 @@ export const meta = {
 - Designed item scanning, emoji-based dialogue and branching storylines with **10+ decision points**.
 - Systems that flag suspicious behavior and change how the story ends.
 - **90% player comprehension** in playtests, with 30-minute average sessions.
+
+<Gallery images={[
+  { src: shot1, alt: 'A happy customer' },
+  { src: shot2, alt: 'Flagged' },
+  { src: shot3, alt: 'Day four' },
+]} />

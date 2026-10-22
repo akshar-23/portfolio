@@ -1,11 +1,16 @@
+import cover from './cover.jpg';
+import shot1 from './shot-1.jpg';
+import shot2 from './shot-2.jpg';
+import shot3 from './shot-3.jpg';
+
 export const meta = {
   title: 'Debt Rush',
   summary: 'A co-op top-down action game: two partners share one budget to outrun the debt collectors.',
   role: 'Developer · Spring 2026 capstone',
   tags: ['Unity', 'C#', 'Co-op', 'UI'],
   featured: true,
-  order: 4,
-  cover: null,
+  order: 5,
+  cover,
   links: [
     { label: 'itch.io', url: 'https://sebastiansalas94.itch.io/debt-rush' },
     { label: 'Trailer', url: 'https://www.youtube.com/watch?v=60bzJhksNKw' },
@@ -18,3 +23,9 @@ export const meta = {
 - Integrated the **UI** across the shop and play phases, from the wallets and loadouts to in-game feedback.
 
 <Video youtube="60bzJhksNKw" caption="Debt Rush trailer" />
+
+<Gallery images={[
+  { src: shot1, alt: 'The shared shop' },
+  { src: shot2, alt: 'Out in the suburbs' },
+  { src: shot3, alt: 'Into the city' },
+]} />

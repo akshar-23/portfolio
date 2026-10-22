@@ -16,7 +16,7 @@ import { createGameMode } from './game.js';
 import { game } from '../game/state.js';
 import { journey } from '../journey.js';
 import { telemetry } from './telemetry.js';
-import { layout, measureLayout } from './layout.js';
+import { layout, measureHud, measureLayout } from './layout.js';
 
 // One station per page section (sections in content/site.js, in order): the ship flies
 // to a section's station when that section comes up.
@@ -132,7 +132,7 @@ function buildWorld(scene, flight) {
   add(createPlanet(16, { set: SET.MOON, albedo: 1.3, ambient: 0.1, noise: 0.55, noiseScale: 0.16, craters: 1, rim: 0.15 }),
     place(6, 24, 8, 40), [0.06, 0, 0.06]);
   add(createPlanet(6, { set: SET.RUST, noise: 0.8, noiseScale: 0.35, embers: 0.03, speckleScale: 3 }),
-    place(6, 42, -20, 70), [0.1, 0, 0.1]);
+    place(6, 60, -22, 60), [0.1, 0, 0.1]);
   add(createPlanet(9, { set: SET.LILAC, noise: 0.3, noiseScale: 0.3, stripes: 0.7, stripeFreq: 16 }),
     place(6, -50, 30, 160), [0, 0.08, 0]);
 
@@ -301,7 +301,7 @@ export function startScene(canvas) {
   const place = () => measureLayout(obstaclesAt(journey.get().index));
   function relayout() {
     if (game.active) {
-      ascii.clearMask();
+      ascii.setMask(measureHud());
       return;
     }
     place();
@@ -328,10 +328,13 @@ export function startScene(canvas) {
     const was = lastStatus;
     if (status === was) return;
     lastStatus = status;
+    // the game HUD changes with the status: clear the space behind what it shows now
+    if (status !== 'off') setTimeout(relayout, 350);
     if (status === 'countdown') {
       run.start(was === 'off' ? flight.sample(journeyState.progress).t : gameT);
       ascii.clearMask();
       ascii.setFocus(true);
+      setTimeout(relayout, 400);
       if (was === 'off') ascii.shock(0.55, '#dce8ff');
     } else if (status === 'off') {
       run.stop();

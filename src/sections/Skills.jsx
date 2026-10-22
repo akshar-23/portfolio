@@ -5,15 +5,16 @@ import { skills } from '../content/site.js';
 // it loops without a jump.
 function Feed({ groups, side }) {
   const rows = groups.flatMap((group) => [
-    { key: `${group.group}-head`, head: true, text: group.group.replace('-', ' & ') },
+    { key: `${group.group}-head`, head: true, text: group.group.replace('-', ' & '), count: group.items.length },
     ...group.items.map((item) => ({ key: `${group.group}-${item}`, text: item })),
   ]);
   return (
     <div className={`skill-feed skill-feed--${side} reveal`} style={{ '--i': side === 'left' ? 1 : 2 }} data-block data-scroll data-mask="box">
       <ul className="skill-feed__track">
         {[...rows, ...rows].map((row, i) => (
-          <li key={`${row.key}-${i}`} className={row.head ? 'skill-feed__head' : undefined} aria-hidden={i >= rows.length || undefined}>
+          <li key={`${row.key}-${i}`} className={row.head ? 'skill-feed__head' : 'skill-feed__item'} aria-hidden={i >= rows.length || undefined}>
             {row.text}
+            {row.head && <span>{String(row.count).padStart(2, '0')}</span>}
           </li>
         ))}
       </ul>

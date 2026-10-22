@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { journey, useJourney } from '../journey.js';
+import { journey, stepsOf, useJourney } from '../journey.js';
 import { profile, sections, transmissions } from '../content/site.js';
 import { telemetry } from '../scene/telemetry.js';
 import { game } from '../game/state.js';
@@ -50,7 +50,7 @@ function Telemetry({ index }) {
 export function Hud() {
   const { index, step } = useJourney();
   const section = sections[index];
-  const steps = section.steps ?? 1;
+  const steps = stepsOf(index);
   const next = sections[index + 1];
 
   return (
