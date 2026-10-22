@@ -480,7 +480,17 @@
 }
 
 .orbit__item .button {
-  margin-top: 12px;
+  margin-top: 16px;
+}
+
+.orbit__authors {
+  display: block;
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
 }
 
 .orbit__venue {

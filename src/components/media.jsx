@@ -15,7 +15,7 @@ export function Video({ src, poster, youtube, vimeo, caption, ratio = '16 / 9', 
     <figure className="media">
       <div className="frame frame--ratio" style={{ '--ratio': ratio }}>
         {embed ? (
-          <iframe src={embed} title={caption ?? 'Video'} loading="lazy" allow="fullscreen; picture-in-picture" allowFullScreen />
+          <iframe src={embed} title={caption ?? 'Video'} loading="lazy" allow="fullscreen; picture-in-picture" />
         ) : (
           <video
             src={src}

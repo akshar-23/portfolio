@@ -20,22 +20,21 @@ export const profile = {
   links: [
     { label: 'GitHub', url: 'https://github.com/akshar-23' },
     { label: 'LinkedIn', url: 'https://www.linkedin.com/in/akshar-vandara' },
-    // TODO: add the Google Scholar profile url
-    { label: 'Scholar', url: null },
+    { label: 'Scholar', url: 'https://scholar.google.com/citations?user=Vl-hGRgAAAAJ&hl=en' },
   ],
 };
 
-// TODO: replace with the real about text
+// About is about the person, not the job: it should stay true whatever the work is.
 export const about = {
   paragraphs: [
-    'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante venenatis dapibus posuere velit aliquet. Cras mattis consectetur purus sit amet fermentum. Vestibulum id ligula porta felis euismod semper, nulla vitae elit libero, a pharetra augue.',
-    'Donec ullamcorper nulla non metus auctor fringilla. Maecenas faucibus mollis interdum. Nullam quis risus eget urna mollis ornare vel eu leo. Curabitur blandit tempus porttitor, cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.',
-    'Aenean lacinia bibendum nulla sed consectetur. Etiam porta sem malesuada magna mollis euismod. Vivamus sagittis lacus vel augue laoreet rutrum faucibus dolor auctor. Sed posuere consectetur est at lobortis.',
+    'I’m a software and research engineer who likes building the things other people build on: tools, systems, and the quiet machinery that makes everything above it feel simple. Games are where I keep ending up. They’re the best excuse I know to put real-time systems, design and a little science in one place, and where games meet AI is the part I find most exciting.',
+    'Most of what I enjoy comes back to problem solving. I can’t leave a puzzle half done, whether it’s a logic grid, a stubborn constraint problem or a profiler trace that doesn’t add up. I like the moment a messy question turns into a clean one, and I’d rather understand why the fast answer works than just know that it does. That curiosity pulls me toward research as much as engineering.',
+    'Away from the keyboard I chase the same feeling with a bit more adrenaline, and I’m usually the first to say yes to the next adventure. I play a lot of games, doodle when my hands need something to do, and can’t help working out how I’d build whatever I’m playing.',
   ],
   facts: [
-    { label: 'based in', value: 'San Francisco Bay Area' },
-    { label: 'focus', value: 'Gameplay systems · PCG · Game AI' },
-    { label: 'research', value: '3 first-author papers' },
+    { label: 'into', value: 'AI × games · puzzles' },
+    { label: 'toolkit', value: 'C++ · C# · Python · Unity · Unreal' },
+    { label: 'solvers & ml', value: 'Z3 · PySAT · PyTorch' },
   ],
   education: [
     {
@@ -107,30 +106,28 @@ export const experience = [
   },
 ];
 
-// TODO: the titles below describe each paper's topic; swap in the published titles and links
 export const research = {
-  intro: 'At the Game Design Lab I work on generating levels and gameplay that move through both space and time, by modelling them as constraint problems.',
   papers: [
     {
-      title: 'Spacetime level generation with Sturgeon',
+      title: 'Spacetime Level Generation and Editing with Constraints from Examples',
       venue: 'AAAI AIIDE 2025',
-      author: 'First author',
+      authors: 'A. Vandara, K. Facey, S. Cooper',
       summary: 'Extends the Sturgeon constraint-based generator to spacetime levels, running 100–500× faster than Spacetime WFC, with an interactive editor for real-time level and path editing.',
-      url: null,
+      url: 'https://doi.org/10.1609/aiide.v21i1.36818',
     },
     {
-      title: '4D spacetime blending of learned mechanics',
+      title: 'Constraint-Based Four-Dimensional Spacetime Blending of Learned Game Mechanics Along Orthogonal Planes',
       venue: 'FDG 2026 · PCG Workshop',
-      author: 'First author',
-      summary: 'Blends learned game mechanics across 4D spacetime, with 3D voxel views of the results in VTK and ParaView.',
-      url: null,
+      authors: 'A. Vandara, S. Cooper',
+      summary: 'Blends learned game mechanics through four-dimensional spacetime, with 3D voxel views of the results in VTK and ParaView.',
+      url: 'https://doi.org/10.1145/3815598.3815702',
     },
     {
-      title: 'Continuous spacetime gameplay with SMT',
+      title: 'Spacetime Constraints for Continuous Gameplay',
       venue: 'FDG 2026 · PCG Workshop',
-      author: 'First author',
-      summary: 'A Python constraint solver built on Z3 SMT that generates continuous spacetime gameplay.',
-      url: null,
+      authors: 'A. Vandara, S. Cooper',
+      summary: 'A constraint solver built on Z3 SMT that generates continuous spacetime gameplay.',
+      url: 'https://doi.org/10.1145/3815598.3815715',
     },
   ],
 };

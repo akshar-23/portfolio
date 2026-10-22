@@ -4,43 +4,37 @@ import { profile, research } from '../content/site.js';
 
 const ICONS = ['grid', 'blend', 'solve'];
 
-function Paper({ paper, i }) {
-  const title = paper.url
-    ? <a href={paper.url} target="_blank" rel="noreferrer">{paper.title} ↗</a>
-    : paper.title;
+function Paper({ paper, i, children }) {
   return (
     <li className="orbit__item reveal" style={{ '--i': i + 2 }} data-block>
-      <PixelIcon name={ICONS[i]} />
-      <span className="orbit__venue">[{String(i + 1).padStart(2, '0')}] {paper.venue} · {paper.author}</span>
-      <h3>{title}</h3>
+      <PixelIcon name={ICONS[i % ICONS.length]} />
+      <span className="orbit__venue">[{String(i + 1).padStart(2, '0')}] {paper.venue}</span>
+      <h3><a href={paper.url} target="_blank" rel="noreferrer">{paper.title} ↗</a></h3>
       <p>{paper.summary}</p>
+      <span className="orbit__authors">{paper.authors}</span>
+      {children}
     </li>
   );
 }
 
-// The papers sit in two columns around the gas giant in the middle.
+// The papers hug the two edges of the screen; the gas giant sits between them.
 export function Research() {
   const scholar = profile.links.find((link) => link.label === 'Scholar');
-  const [first, second, third] = research.papers;
+  const half = Math.ceil(research.papers.length / 2);
+  const last = research.papers.length - 1;
+  const side = (papers, offset) => papers.map((paper, i) => (
+    <Paper paper={paper} i={offset + i} key={paper.url}>
+      {offset + i === last && scholar?.url && (
+        <a className="button button--accent orbit__scholar" href={scholar.url} target="_blank" rel="noreferrer">google scholar ↗</a>
+      )}
+    </Paper>
+  ));
   return (
     <Screen id="research" className="research">
       <SectionHead id="research" title="Research" className="research__head" />
       <div className="orbit" data-scroll>
-        <ol className="orbit__side orbit__side--left">
-          <Paper paper={first} i={0} />
-          <Paper paper={second} i={1} />
-        </ol>
-        <ol className="orbit__side orbit__side--right" start={3}>
-          <Paper paper={third} i={2} />
-          <li className="orbit__item reveal" style={{ '--i': 5 }} data-block>
-            <PixelIcon name="lab" />
-            <span className="orbit__venue">game design lab · northeastern</span>
-            <p>{research.intro}</p>
-            {scholar?.url && (
-              <a className="button button--accent" href={scholar.url} target="_blank" rel="noreferrer">google scholar ↗</a>
-            )}
-          </li>
-        </ol>
+        <ol className="orbit__side orbit__side--left">{side(research.papers.slice(0, half), 0)}</ol>
+        <ol className="orbit__side orbit__side--right" start={half + 1}>{side(research.papers.slice(half), half)}</ol>
       </div>
     </Screen>
   );
