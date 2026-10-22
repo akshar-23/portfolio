@@ -17,7 +17,7 @@
 
 /* a column of content on one side of the screen */
 .col {
-  width: min(440px, 100%);
+  width: min(460px, 100%);
   max-height: 100%;
   overscroll-behavior: contain;
 }
@@ -40,7 +40,7 @@
   gap: 10px;
   margin-bottom: 8px;
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 11.5px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--accent);
@@ -165,6 +165,7 @@
 .hero__tagline {
   max-width: 30em;
   margin-bottom: 26px;
+  font-size: 16px;
   color: var(--text-dim);
 }
 
@@ -184,7 +185,7 @@
 
 .hero__stats b {
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--text);
 }
@@ -197,54 +198,28 @@
 
 /* ---------- about ---------- */
 
+/* About is all prose, so it gets a wider column and fewer lines */
+.about .col {
+  width: min(500px, 100%);
+}
+
 .about__text p {
   margin-bottom: 0.9em;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-dim);
 }
 
 .about__text p:first-child {
-  font-size: 15.5px;
-  color: var(--text);
-}
-
-/* mono key: value rows */
-.kv {
-  display: grid;
-  gap: 6px;
-  margin: 18px 0 0;
-  padding-top: 16px;
-  border-top: 1px dashed var(--line-strong);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.kv div {
-  display: grid;
-  grid-template-columns: 9em 1fr;
-  gap: 12px;
-}
-
-.kv dt {
-  color: var(--text-faint);
-}
-
-.kv dt::after {
-  content: ' :';
-}
-
-.kv dd {
-  margin: 0;
+  font-size: 16.5px;
   color: var(--text);
 }
 
 .edu {
   display: grid;
-  gap: 10px;
-  margin: 16px 0 0;
-  padding: 0;
+  gap: 12px;
+  margin: 18px 0 0;
+  padding: 16px 0 0;
+  border-top: 1px dashed var(--line-strong);
   list-style: none;
 }
 
@@ -255,20 +230,20 @@
 }
 
 .edu__degree {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
 }
 
 .edu__school {
   grid-row: 2;
-  font-size: 12.5px;
+  font-size: 13.5px;
   color: var(--text-faint);
 }
 
 .edu time {
   grid-row: span 2;
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 11.5px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--accent);
@@ -292,7 +267,7 @@
   gap: 10px;
   padding: 5px 0 5px 14px;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   text-align: left;
@@ -338,7 +313,7 @@
 }
 
 .log__meta {
-  font-size: 10px;
+  font-size: 11px;
 }
 
 /* the current step's details */
@@ -354,26 +329,26 @@
   display: block;
   margin-bottom: 6px;
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 11.5px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--accent);
 }
 
 .detail__title {
-  font-size: clamp(18px, 1.7vw, 24px);
+  font-size: clamp(19px, 1.8vw, 26px);
   letter-spacing: 0.01em;
 }
 
 .detail__sub {
   margin: 4px 0 12px;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-dim);
 }
 
 .detail__text {
   margin: 10px 0 14px;
-  font-size: 14.5px;
+  font-size: 15.5px;
   color: var(--text-dim);
 }
 
@@ -393,7 +368,7 @@
 .points li {
   position: relative;
   padding-left: 16px;
-  font-size: 13.5px;
+  font-size: 14.5px;
   line-height: 1.55;
   color: var(--text-dim);
 }
@@ -524,7 +499,7 @@
   padding-top: 14px;
   border-top: 1px dashed var(--line-strong);
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 11.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -652,7 +627,7 @@
 }
 
 .skills__note {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-faint);
 }
 
@@ -660,7 +635,7 @@
   position: absolute;
   top: 50%;
   height: min(52vh, 420px);
-  width: 220px;
+  width: 240px;
   overflow: hidden;
   margin-top: max(-26vh, -210px);
   mask-image: linear-gradient(transparent, #000 18%, #000 82%, transparent);
@@ -686,7 +661,7 @@
 /* items: plain text, quiet */
 .skill-feed__item {
   font-family: var(--font-body);
-  font-size: 13.5px;
+  font-size: 14.5px;
   line-height: 2;
   color: var(--text-dim);
 }
@@ -709,7 +684,7 @@
   padding-bottom: 6px;
   border-bottom: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -718,7 +693,7 @@
 
 .skill-feed__head span {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.1em;
   color: var(--text-faint);
@@ -735,7 +710,7 @@
 /* ---------- contact ---------- */
 
 .contact__lead {
-  font-size: 14.5px;
+  font-size: 15.5px;
   color: var(--text-dim);
 }
 
@@ -743,7 +718,7 @@
   display: inline-block;
   margin: 2px 0 22px;
   font-family: var(--font-display);
-  font-size: clamp(16px, 1.6vw, 21px);
+  font-size: clamp(17px, 1.7vw, 23px);
   font-weight: 700;
   text-decoration: none;
   overflow-wrap: anywhere;
@@ -774,7 +749,7 @@
 
 .field span {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 11.5px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-faint);
@@ -785,7 +760,7 @@
   width: 100%;
   padding: 10px 0;
   font: inherit;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text);
   background: none;
   border: 0;
@@ -816,7 +791,7 @@
   padding: 0;
   list-style: none;
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 11.5px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -976,6 +951,14 @@
     font-size: 14px;
   }
 
+  .detail__sub {
+    font-size: 14px;
+  }
+
+  .detail__text {
+    font-size: 14.5px;
+  }
+
   /* the step logs fold into a row of numbers; the details below name the current one */
   .log {
     display: flex;
@@ -1008,10 +991,6 @@
     padding: 9px 12px;
   }
 
-  .kv div {
-    grid-template-columns: 7.5em 1fr;
-  }
-
   .field {
     grid-template-columns: 5em 1fr;
   }
@@ -1032,6 +1011,24 @@
   .name {
     font-size: clamp(30px, 11vh, 60px);
     margin-bottom: 12px;
+  }
+
+  .about__text p,
+  .detail__sub {
+    font-size: 14px;
+  }
+
+  .about__text p:first-child {
+    font-size: 15.5px;
+  }
+
+  .points li {
+    font-size: 13.5px;
+  }
+
+  .detail__text,
+  .contact__lead {
+    font-size: 14.5px;
   }
 
   .hero__role {

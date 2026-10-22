@@ -46,7 +46,7 @@ const SHIP_PARTS = {
   Dull_metalrubber: { set: SET.SHIP, albedo: 0.28 },
   Weapons: { set: SET.RUST, albedo: 0.9, rim: 0.2 },
   Cockpit: { set: SET.GLASS, albedo: 0.75, spec: 1, rim: 0.3 },
-  Thruster: { set: SET.EMBER, albedo: 0.3, glow: 0.55, flicker: 1 },
+  Thruster: { set: SET.PLASMA, albedo: 0.3, glow: 0.7, flicker: 1 },
 };
 
 // Everything is placed in a station's view: x right, y up, z ahead of the camera.
@@ -121,9 +121,11 @@ function buildWorld(scene, flight) {
   emberRing.rotation.x = Math.PI * 0.4;
   add(emberRing, ember.position, [0, 0, -0.15]);
 
-  // skills: columns at both edges, an ice world between them and a passing comet
+  // skills: columns at both edges, an ice world between them and a passing comet. The
+  // world sits high, above where the route to contact goes, so the ship and the camera
+  // pass under it
   add(createPlanet(8, { set: SET.ICE, albedo: 1.1, noise: 0.6, noiseScale: 0.35, craters: 0.8, rim: 0.2 }),
-    place(5, 0, 10, 48), [0.05, 0.08, 0]);
+    place(5, 0, 22, 60), [0.05, 0.08, 0]);
   const comet = createComet({ from: place(5, -40, 60, 200), to: place(5, 190, 10, 160), period: 45 });
   scene.add(comet.group);
   updates.push((time) => comet.update(time, sun.position, flight.res));

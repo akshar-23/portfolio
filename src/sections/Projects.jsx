@@ -8,8 +8,9 @@ export const openProject = (slug) => {
 };
 
 // One featured project per step, with its picture in a small feed on the other side.
+// The card links out to the project's first two links (just the first on phones).
 export function Projects() {
-  const { active, step } = useActive('projects');
+  const { active, step, compact } = useActive('projects');
   const project = featured[step];
   const links = (project.links ?? []).filter((link) => link.url);
   return (
@@ -30,7 +31,7 @@ export function Projects() {
           </ul>
           <div className="detail__actions">
             <button className="button button--accent" onClick={() => openProject(project.slug)}>open project</button>
-            {links.slice(0, 1).map((link) => (
+            {links.slice(0, compact ? 1 : 2).map((link) => (
               <a className="button" key={link.label} href={link.url} target="_blank" rel="noreferrer">{link.label} ↗</a>
             ))}
           </div>

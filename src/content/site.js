@@ -11,7 +11,6 @@ export const profile = {
   stats: [
     { value: '03', label: 'peer-reviewed papers' },
     { value: '04', label: 'studios & labs' },
-    { value: '100–500×', label: 'faster level generation' },
   ],
   location: 'San Francisco Bay Area, CA',
   now: 'Game Programming Intern @ E-Line Media',
@@ -30,11 +29,6 @@ export const about = {
     'I’m a software and research engineer who likes building the things other people build on: tools, systems, and the quiet machinery that makes everything above it feel simple. Games are where I keep ending up. They’re the best excuse I know to put real-time systems, design and a little science in one place, and where games meet AI is the part I find most exciting.',
     'Most of what I enjoy comes back to problem solving. I can’t leave a puzzle half done, whether it’s a logic grid, a stubborn constraint problem or a profiler trace that doesn’t add up. I like the moment a messy question turns into a clean one, and I’d rather understand why the fast answer works than just know that it does. That curiosity pulls me toward research as much as engineering.',
     'Away from the keyboard I chase the same feeling with a bit more adrenaline, and I’m usually the first to say yes to the next adventure. I play a lot of games, doodle when my hands need something to do, and can’t help working out how I’d build whatever I’m playing.',
-  ],
-  facts: [
-    { label: 'into', value: 'AI × games · puzzles' },
-    { label: 'toolkit', value: 'C++ · C# · Python · Unity · Unreal' },
-    { label: 'solvers & ml', value: 'Z3 · PySAT · PyTorch' },
   ],
   education: [
     {

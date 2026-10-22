@@ -15,14 +15,14 @@ export function createExhaust({ count = 160 } = {}) {
   geometry.setAttribute('aAge', new THREE.BufferAttribute(ages, 1));
 
   const points = new THREE.Points(geometry, new THREE.ShaderMaterial({
-    uniforms: { uSet: { value: encodeSet(SET.EMBER) } },
+    uniforms: { uSet: { value: encodeSet(SET.PLASMA) } },
     vertexShader: /* glsl */ `
       attribute float aAge;
       varying float vBright;
       void main() {
         vec4 mv = modelViewMatrix * vec4(position, 1.0);
         gl_Position = projectionMatrix * mv;
-        vBright = (1.0 - aAge) * (1.0 - aAge);
+        vBright = 1.0 - aAge;
         gl_PointSize = aAge < 0.25 ? 3.0 : 2.0;
       }
     `,
@@ -31,7 +31,7 @@ export function createExhaust({ count = 160 } = {}) {
       varying float vBright;
       void main() {
         if (vBright < 0.03) discard;
-        gl_FragColor = vec4(vBright, 0.0, vBright * 0.6, uSet);
+        gl_FragColor = vec4(vBright, 0.0, vBright * 0.9, uSet);
       }
     `,
   }));
@@ -50,7 +50,7 @@ export function createExhaust({ count = 160 } = {}) {
     side.set(1, 0, 0).applyQuaternion(rig.quaternion);
     up.set(0, 1, 0).applyQuaternion(rig.quaternion);
 
-    carry += dt * (45 + thrust * 160);
+    carry += dt * (60 + thrust * 160);
     while (carry >= 1 && nozzles.length) {
       carry -= 1;
       const i = next;

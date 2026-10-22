@@ -4,18 +4,24 @@ export const meta = {
   title: 'Sturgeon Spacetime Suite',
   summary: 'Constraint-based tools that generate and edit game levels through both space and time.',
   role: 'Research · Game Design Lab',
-  tags: ['Python', 'PySAT', 'Z3', 'ParaView'],
+  tags: ['Python', 'PySAT', 'ParaView'],
   featured: true,
   order: 1,
   cover,
   // TODO: add the GitHub link
   links: [
-    { label: 'Paper', url: 'https://doi.org/10.1609/aiide.v21i1.36818' },
+    { label: 'AIIDE', url: 'https://doi.org/10.1609/aiide.v21i1.36818' },
+    { label: 'FDG', url: 'https://doi.org/10.1145/3815598.3815702' },
     { label: 'GitHub', url: null },
   ],
 };
 
 - Extended the Sturgeon constraint-based level generator (Python, PySAT) to spacetime levels, running **100–500× faster** than Spacetime WFC.
 - Built an interactive editor for changing levels and paths in real time, with 3D voxel views through VTK / ParaView.
-- Added 4D spacetime blending of learned game mechanics, and a Z3 SMT solver for continuous spacetime gameplay.
+- Added 4D spacetime blending of learned game mechanics along orthogonal planes.
 - Benchmarked speed and solvability across three domains; published at **AAAI AIIDE 2025** and **FDG 2026**.
+
+## Papers
+
+- [Spacetime Level Generation and Editing with Constraints from Examples](https://doi.org/10.1609/aiide.v21i1.36818) · AAAI AIIDE 2025
+- [Constraint-Based Four-Dimensional Spacetime Blending of Learned Game Mechanics Along Orthogonal Planes](https://doi.org/10.1145/3815598.3815702) · FDG 2026, PCG Workshop

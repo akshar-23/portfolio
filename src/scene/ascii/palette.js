@@ -37,10 +37,11 @@ export const SET = {
   LILAC: 9,
   ICE: 10,
   EMBER: 11,
-  FLOWER: 12,
-  GLASS: 13,
-  SUN: 14,
-  SHIP: 15,
+  PLASMA: 12,
+  FLOWER: 13,
+  GLASS: 14,
+  SUN: 15,
+  SHIP: 16,
 };
 
 // Sets from here up are solid: they block sunlight and cast shadow lanes in the rays.
@@ -137,6 +138,13 @@ export const GLYPH_SETS = [
     bands: [' ', '.', '.o', 'oe', 'e69o', '86@e', '@&8', '@'],
     dark: '#5a2008', bright: '#ffa14a',
     jitter: 1.0, scramble: 0.6, gamma: 0.7, grain: 0.25,
+  },
+  {
+    // the ship's thrusters and their exhaust: electric blue, hot cyan at the nozzles
+    name: 'plasma',
+    bands: [' ', '.', '.:', ':+', '+*', '*#', '#@', '@#'],
+    dark: '#2a62ff', bright: '#8fe6ff',
+    jitter: 0.8, scramble: 1.2, gamma: 0.6, grain: 0.2,
   },
   {
     name: 'flower',

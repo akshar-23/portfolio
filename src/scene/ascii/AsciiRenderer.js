@@ -319,10 +319,11 @@ const fragmentShader = /* glsl */ `
       color *= 1.0 - under * 0.55;
 
       // and the same kind of pocket around the ship, so it stands out from what's behind
-      if (uShip.z > 0.0) {
+      // (its thrusters and exhaust belong to it, so they keep their full glow)
+      if (uShip.z > 0.0 && set != SET_PLASMA) {
         vec2 d = (center - uShip.xy) / vec2(uShip.z, uShip.z * 0.8);
         float pocket = 1.0 - smoothstep(0.75, 1.15, length(d));
-        if (set != SET_EMBER && hash12(cell + 3.7) < pocket * 0.85) ink = 0.0;
+        if (hash12(cell + 3.7) < pocket * 0.85) ink = 0.0;
         color *= 1.0 - pocket * 0.5;
       }
     } else if (outline) {
