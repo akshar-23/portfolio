@@ -37,7 +37,8 @@ const ROUTE = {
     [6, 0, -920], // contact
   ],
   stations: [0, 2, 4, 6, 8, 10, 12],
-  rolls: [0, 1, 0, 0, -1, 0],
+  // home > about > experience > research > projects > skills > contact
+  stunts: [['corkscrew', 1], ['roll', 1], ['swoop', 1], null, ['roll', -1], ['corkscrew', -1]],
 };
 
 const SHIP_PARTS = {
@@ -78,7 +79,7 @@ function buildWorld(scene, flight) {
   // hero: content on the left, so the big planet and the sun are on the right
   add(createPlanet(15, { set: SET.RUST, noise: 0.8, noiseScale: 0.18, rim: 0.15, embers: 0.025, speckleScale: 2.2 }),
     place(0, 23, 8, 10), [0.08, 0, 0.08]);
-  add(createPlanet(6, { set: SET.TEAL, noise: 0.5, noiseScale: 0.5 }), place(0, -60, 25, 160), [0, 0.1, 0]);
+  const heroMoon = add(createPlanet(6, { set: SET.TEAL, noise: 0.5, noiseScale: 0.5 }), place(0, -60, 25, 160), [0, 0.1, 0]);
 
   // about: content on the right
   add(createPlanet(10, { set: SET.TEAL, noise: 0.5, noiseScale: 0.3, embers: 0.04, flowers: 0.08, speckleScale: 6 }),
@@ -133,7 +134,7 @@ function buildWorld(scene, flight) {
   // contact: content on the left, the big moon on the right
   add(createPlanet(16, { set: SET.MOON, albedo: 1.3, ambient: 0.1, noise: 0.55, noiseScale: 0.16, craters: 1, rim: 0.15 }),
     place(6, 24, 8, 40), [0.06, 0, 0.06]);
-  add(createPlanet(6, { set: SET.RUST, noise: 0.8, noiseScale: 0.35, embers: 0.03, speckleScale: 3 }),
+  const contactMoon = add(createPlanet(6, { set: SET.RUST, noise: 0.8, noiseScale: 0.35, embers: 0.03, speckleScale: 3 }),
     place(6, 60, -22, 60), [0.1, 0, 0.1]);
   add(createPlanet(9, { set: SET.LILAC, noise: 0.3, noiseScale: 0.3, stripes: 0.7, stripeFreq: 16 }),
     place(6, -50, 30, 160), [0, 0.08, 0]);
@@ -143,19 +144,19 @@ function buildWorld(scene, flight) {
   galaxy.lookAt(flight.views[5].position);
   galaxy.rotateX(1.0);
 
-  for (const [view, x, y, z, size] of [
+  const nebulae = [
     [0, -140, 70, 320, 200],
     [2, 90, -30, 170, 140],
     [4, -60, 25, 130, 150],
     [4, 80, 50, 220, 180],
-  ]) {
-    add(createNebula(size), place(view, x, y, z));
-  }
+  ].map(([view, x, y, z, size]) => add(createNebula(size), place(view, x, y, z)));
 
   return {
     sun,
     sunRadius,
     obstacles,
+    // left out while browsing, so there's a little less going on (the game has them all)
+    extras: [heroMoon, contactMoon, nebulae[3]],
     update(time, dt) {
       for (const [object, [x, y, z]] of spinning) {
         object.rotation.x += x * dt;
@@ -376,6 +377,11 @@ export function startScene(canvas) {
   const backward = new THREE.Vector3();
   const rollAxis = new THREE.Vector3(0, 0, 1);
   const rollQuat = new THREE.Quaternion();
+  const pitchAxis = new THREE.Vector3(1, 0, 0);
+  const pitchQuat = new THREE.Quaternion();
+  // where the current stunt has moved the ship off its spot (world units), so steering
+  // toward the empty part of the screen doesn't fight it
+  const stuntOffset = new THREE.Vector3();
   const yawQuat = new THREE.Quaternion();
   const idleTurn = new THREE.Euler();
   const shipScreen = new THREE.Vector3();
@@ -400,6 +406,7 @@ export function startScene(canvas) {
 
     world.update(time, dt);
     clock = time;
+    for (const object of world.extras) object.visible = ascii.browse < 0.5;
     const along = Math.min((time - tween.start) / tween.duration, 1);
     journeyState.progress = tween.from + (tween.to - tween.from) * easeInOut(along);
 
@@ -408,6 +415,7 @@ export function startScene(canvas) {
     const playing = game.active;
     let t;
     let roll = 0;
+    let stunt = { x: 0, y: 0, pitch: 0 };
     let runStep = null;
     if (playing) {
       onScreen.copy(shipMiddle).project(camera);
@@ -415,7 +423,7 @@ export function startScene(canvas) {
       t = gameT = runStep.t;
       if (runStep.jumped) started = false;
     } else {
-      ({ t, roll } = flight.sample(journeyState.progress));
+      ({ t, roll, ...stunt } = flight.sample(journeyState.progress));
     }
     flight.frameAt(t, frame);
 
@@ -429,8 +437,9 @@ export function startScene(canvas) {
       (layout.free.x / window.innerWidth) * 2 - 1 + cursor.x * 0.12,
       1 - (layout.free.y / window.innerHeight) * 2 - cursor.y * 0.1
     );
-    // where the ship's middle is on screen now: steer the offset until the two meet
-    onScreen.copy(shipMiddle).project(camera);
+    // where the ship's middle is on screen now (leaving out the stunt): steer the offset
+    // until the two meet
+    onScreen.copy(shipMiddle).sub(stuntOffset).project(camera);
     // (only once the camera is in place: before that the projection is meaningless)
     if (started && Number.isFinite(onScreen.x) && Number.isFinite(onScreen.y) && onScreen.z < 1) {
       const reach = 1 - Math.exp(-dt * 2.2);
@@ -452,10 +461,12 @@ export function startScene(canvas) {
     const hover = Math.sin(time * 1.7) * 0.45 * idle;
     const sideDrift = Math.sin(time * 0.55) * 0.9 * idle;
     shipRig.position.copy(frame.position)
-      .addScaledVector(frame.right, lateral + sideDrift)
-      .addScaledVector(frame.up, offset.y + hover);
+      .addScaledVector(frame.right, lateral + sideDrift + stunt.x)
+      .addScaledVector(frame.up, offset.y + hover + stunt.y);
     basis.makeBasis(frame.right, frame.up, backward.copy(frame.forward).negate());
+    stuntOffset.copy(frame.right).multiplyScalar(stunt.x).addScaledVector(frame.up, stunt.y);
     shipRig.quaternion.setFromRotationMatrix(basis)
+      .multiply(pitchQuat.setFromAxisAngle(pitchAxis, stunt.pitch))
       .multiply(rollQuat.setFromAxisAngle(rollAxis, bank + roll + Math.sin(time * 0.9) * 0.1 * idle))
       .multiply(yawQuat.setFromEuler(idleTurn.set(Math.sin(time * 1.3) * 0.05 * idle, Math.sin(time * 0.7) * 0.08 * idle, 0)));
     shipRig.visible = !playing || runStep.showShip;

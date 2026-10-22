@@ -18,28 +18,44 @@ export function createRockGeometry() {
   return geometry;
 }
 
-// Tumbling rocks scattered in a tube around a stretch of the flight path, with a
-// clear corridor in the middle for the ship.
+// Tumbling rocks in layers around a stretch of the flight path. None come inside the
+// space the ship and the chase camera fly through (with their stunts); a few sit just
+// outside it, the rest further out, bigger with distance so the far layers still read.
 //   curve, from, to: the stretch of path (curve parameter t)
-//   corridor, spread: inner and outer radius of the tube
-export function createAsteroidField({ curve, from, to, count = 130, corridor = 14, spread = 70 }) {
+//   clear: that space around the path: half its width, and how far below and above
+const LAYERS = [
+  { share: 0.25, radius: [45, 75], scale: [0.8, 3] },
+  { share: 0.45, radius: [75, 130], scale: [1.5, 4.5] },
+  { share: 0.3, radius: [130, 210], scale: [3, 7] },
+];
+
+export function createAsteroidField({ curve, from, to, count = 130, clear = { x: 48, below: 20, above: 22 } }) {
   const material = createAsciiMaterial({ set: SET.MOON, albedo: 1.1, noise: 0.6, noiseScale: 1.4, craters: 0.6, rim: 0.2 });
   const mesh = new THREE.InstancedMesh(createRockGeometry(), material, count);
   mesh.frustumCulled = false;
 
   const up = new THREE.Vector3(0, 1, 0);
-  const rocks = Array.from({ length: count }, () => {
+  const pick = (layer) => {
+    // keep re-rolling the direction until the rock is outside the clear space
+    for (;;) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = THREE.MathUtils.lerp(...layer.radius, Math.random());
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius * 0.7;
+      if (Math.abs(x) >= clear.x || y <= -clear.below || y >= clear.above) return { x, y };
+    }
+  };
+  const rocks = Array.from({ length: count }, (_, i) => {
+    let at = i / count;
+    const layer = LAYERS.find((l) => (at -= l.share) < 0) ?? LAYERS[LAYERS.length - 1];
     const t = THREE.MathUtils.lerp(from, to, Math.random());
     const forward = curve.getTangent(t);
     const side = new THREE.Vector3().crossVectors(forward, up).normalize();
     const lift = new THREE.Vector3().crossVectors(side, forward);
-    const angle = Math.random() * Math.PI * 2;
-    const radius = THREE.MathUtils.lerp(corridor, spread, Math.random() ** 1.5);
+    const { x, y } = pick(layer);
     return {
-      position: curve.getPoint(t)
-        .addScaledVector(side, Math.cos(angle) * radius)
-        .addScaledVector(lift, Math.sin(angle) * radius * 0.7),
-      scale: THREE.MathUtils.lerp(0.8, 4.5, Math.random() ** 2),
+      position: curve.getPoint(t).addScaledVector(side, x).addScaledVector(lift, y),
+      scale: THREE.MathUtils.lerp(...layer.scale, Math.random() ** 2),
       axis: new THREE.Vector3().randomDirection(),
       spin: THREE.MathUtils.randFloat(0.15, 0.8),
       phase: Math.random() * Math.PI * 2,

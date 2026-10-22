@@ -131,6 +131,8 @@ const fragmentShader = /* glsl */ `
   uniform vec3 uShip; // the ship on screen: x, y (device px), radius (px, 0 = none)
   uniform float uShock; // 0 - 1: how much of the screen is scrambled
   uniform vec3 uShockColor;
+  uniform float uBrowse; // 1 while browsing the portfolio, 0 in the game
+  uniform float uRainDensity; // share of columns that carry rain
 
   float glyph(int set, int index, vec2 f) {
     vec2 uv = vec2(
@@ -151,7 +153,7 @@ const fragmentShader = /* glsl */ `
     vec2 r = vec2(0.0);
     for (int k = 0; k < 2; k++) {
       float s = cell.x * 1.618 + float(k) * 71.3;
-      if (hash11(s) > 0.09) continue;
+      if (hash11(s) > uRainDensity) continue;
       float speed = mix(3.0, 9.0, hash11(s + 1.1));
       float len = mix(4.0, 16.0, hash11(s + 2.2));
       float period = uGrid.y + len + mix(30.0, 120.0, hash11(s + 3.3));
@@ -304,6 +306,15 @@ const fragmentShader = /* glsl */ `
       color = mix(color, uHead, head * 0.35);
       bloom = L * L * 0.35 + glow * 0.5;
 
+      // while browsing, dim things recede and bright things shine more (the ship stays
+      // as it is)
+      int base = int(id);
+      if (uBrowse > 0.001 && base != SET_SHIP && base != SET_GLASS && base != SET_PLASMA) {
+        float shine = smoothstep(0.2, 0.75, L);
+        color *= mix(1.0, mix(0.6, 1.25, shine), uBrowse);
+        bloom *= mix(1.0, mix(0.4, 1.0, shine), uBrowse);
+      }
+
       // intro: objects decode out of scrambled glyphs
       if (h > uReveal) {
         float scramble = hash12(cell + floor(uTime * 20.0));
@@ -424,8 +435,13 @@ export class AsciiRenderer {
       uShock: { value: 0 },
       uShockColor: { value: new THREE.Vector3(1, 1, 1) },
       uCalm: { value: 0 },
+      uBrowse: { value: 1 },
+      uRainDensity: { value: 0.09 },
     };
     this.calmTarget = 0;
+    // 1 while browsing the portfolio, easing to 0 in the game, which keeps its full look
+    this.browse = 1;
+    this.browseTarget = 1;
     // in the game the rain and the rays step back, so rocks and rings are easy to read
     this.focus = 0;
     this.focusTarget = 0;
@@ -616,6 +632,7 @@ export class AsciiRenderer {
 
   setFocus(on) {
     this.focusTarget = on ? 1 : 0;
+    this.browseTarget = on ? 0 : 1;
   }
 
   clearMask() {
@@ -648,7 +665,8 @@ export class AsciiRenderer {
   update(dt) {
     dt *= this.motion;
     this.time += dt;
-    this.rainTime += dt * (1 + this.warp * 2.5);
+    // while browsing the rain falls a little slower
+    this.rainTime += dt * (1 + this.warp * 2.5) * (1 - this.browse * 0.35);
     if (this.revealStart === null) this.revealStart = this.time;
     const t = Math.min((this.time - this.revealStart) / (1.8 * this.motion), 1);
 
@@ -659,7 +677,11 @@ export class AsciiRenderer {
     u.uCalm.value += (this.calmTarget - u.uCalm.value) * (1 - Math.exp(-dt * 3));
     u.uShock.value *= Math.exp(-dt * 4);
     this.focus += (this.focusTarget - this.focus) * (1 - Math.exp(-dt * 3));
-    u.uRain.value = RAIN_STRENGTH * (1 - this.focus * 0.85);
+    this.browse += (this.browseTarget - this.browse) * (1 - Math.exp(-dt * 3));
+    u.uBrowse.value = this.browse;
+    // and there's about half as much of it
+    u.uRainDensity.value = 0.09 - this.browse * 0.045;
+    u.uRain.value = RAIN_STRENGTH * (1 - this.focus * 0.85) * (1 - this.browse * 0.2);
     u.uRayStrength.value = RAY_STRENGTH * (1 - this.focus * 0.65);
   }
 
