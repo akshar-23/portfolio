@@ -52,6 +52,7 @@ const helpers = /* glsl */ `
 
 // Sun rays, one value per cell: walk from the cell toward the sun and dim the light
 // for every solid object on the way, so planets cast shadow lanes through the beams.
+// Also (in g) how much of the ship's exhaust is around each cell, for its glow.
 const raysShader = /* glsl */ `
   ${helpers}
 
@@ -61,7 +62,26 @@ const raysShader = /* glsl */ `
   uniform float uSunR;
   uniform float uSunOn;
   uniform float uAspect;
+  uniform float uCellRatio; // cell height / width
   uniform float uTime;
+
+  // the exhaust within about a cell and a half, softly weighted by distance (halved, to
+  // fit in 0 - 1)
+  float exhaustAround(vec2 cell) {
+    ivec2 first = ivec2(cell) * 2 - 2;
+    ivec2 last = ivec2(uGrid) * 2 - 1;
+    float sum = 0.0;
+    for (int y = 0; y < 6; y++) {
+      for (int x = 0; x < 6; x++) {
+        vec4 s = texelFetch(uScene, clamp(first + ivec2(x, y), ivec2(0), last), 0);
+        if (int(floor(s.a * 31.0 + 0.5)) != SET_PLASMA) continue;
+        // from the texel's middle to the cell's, in texel widths (texels are tall)
+        vec2 d = (vec2(x, y) - 2.5) * vec2(1.0, uCellRatio);
+        sum += s.r * exp(-dot(d, d) / 2.4);
+      }
+    }
+    return min(sum * 0.5, 1.0);
+  }
 
   float solidAt(vec2 uv) {
     float id = setAt(uScene, ivec2(uv * uGrid * 2.0));
@@ -69,11 +89,12 @@ const raysShader = /* glsl */ `
   }
 
   void main() {
+    vec2 cell = floor(gl_FragCoord.xy);
+    float exhaust = exhaustAround(cell);
     if (uSunOn < 0.01) {
-      gl_FragColor = vec4(0.0);
+      gl_FragColor = vec4(0.0, exhaust, 0.0, 1.0);
       return;
     }
-    vec2 cell = floor(gl_FragCoord.xy);
     vec2 uv = (cell + 0.5) / uGrid;
     vec2 toSun = uSunUV - uv;
     vec2 scale = vec2(uAspect, 1.0);
@@ -98,7 +119,7 @@ const raysShader = /* glsl */ `
 
     float edge = max(dist - uSunR, 0.0);
     float rays = exp(-edge * 1.3) * beams + exp(-edge * 9.0) * 0.8;
-    gl_FragColor = vec4(clamp(rays * light * uSunOn, 0.0, 1.0), 0.0, 0.0, 1.0);
+    gl_FragColor = vec4(clamp(rays * light * uSunOn, 0.0, 1.0), exhaust, 0.0, 1.0);
   }
 `;
 
@@ -354,10 +375,29 @@ const fragmentShader = /* glsl */ `
       }
     }
 
-    // soft glow under bright glyphs, plus a warm haze where the sun shines
-    float halo = bloom * 0.12 * (1.0 - smoothstep(0.0, 0.75, length(f - 0.5)));
+    // soft glow under bright glyphs, plus a warm haze where the sun shines; the ship's
+    // thrusters and exhaust glow stronger and fill their whole cell, so a trail of them
+    // reads as one glowing stream
+    bool plasma = set == SET_PLASMA;
+    float halo = (plasma ? max(bloom, 0.45) * 0.55 : bloom * 0.12)
+      * (1.0 - smoothstep(0.0, plasma ? 1.05 : 0.75, length(f - 0.5)));
     vec3 col = uBg + color * halo + uBright[SET_RAY] * ray * ray * 0.06;
     col = mix(col, color, ink);
+
+    // the exhaust's glow spills a little past its glyphs: the rays pass works out how
+    // much exhaust is around each cell, blended here between cells so it comes out smooth
+    {
+      vec2 tc = p / uCell - 0.5;
+      ivec2 i0 = ivec2(floor(tc));
+      vec2 w = fract(tc);
+      ivec2 last = ivec2(uGrid) - 1;
+      float a = texelFetch(uRays, clamp(i0, ivec2(0), last), 0).g;
+      float b = texelFetch(uRays, clamp(i0 + ivec2(1, 0), ivec2(0), last), 0).g;
+      float c = texelFetch(uRays, clamp(i0 + ivec2(0, 1), ivec2(0), last), 0).g;
+      float d = texelFetch(uRays, clamp(i0 + ivec2(1, 1), ivec2(0), last), 0).g;
+      float spill = mix(mix(a, b, w.x), mix(c, d, w.x), w.y) * 2.0;
+      col += uBright[SET_PLASMA] * min(spill, 1.5) * 0.3 * (1.0 - under);
+    }
 
     vec2 uv = gl_FragCoord.xy / uRes;
     float vignette = 1.0 - 0.35 * pow(length((uv - 0.5) * vec2(1.0, 0.85)) * 1.35, 2.4);
@@ -405,6 +445,7 @@ export class AsciiRenderer {
       uSunR: { value: 0.02 },
       uSunOn: { value: 0 },
       uAspect: { value: 1 },
+      uCellRatio: { value: 1 },
       uTime: { value: 0 },
     };
 
@@ -546,6 +587,7 @@ export class AsciiRenderer {
     this.gridSize.set(cols * w, rows * h);
     this.aspect = this.gridSize.x / this.gridSize.y;
     this.raysUniforms.uAspect.value = this.aspect;
+    this.raysUniforms.uCellRatio.value = h / w;
   }
 
   setPointer(x, y) {

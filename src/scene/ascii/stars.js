@@ -39,7 +39,7 @@ const outputChunk = /* glsl */ `
 
 const SKY_DISTANCE = 1500;
 
-export function createStarfield({ count = 2000, half = 450, sparkles = 16 } = {}) {
+export function createStarfield({ count = 1000, half = 450, sparkles = 8 } = {}) {
   const uniforms = {
     uTime: sceneUniforms.uTime,
     uCamPos: { value: new THREE.Vector3() },

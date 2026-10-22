@@ -140,10 +140,11 @@ export const GLYPH_SETS = [
     jitter: 1.0, scramble: 0.6, gamma: 0.7, grain: 0.25,
   },
   {
-    // the ship's thrusters and their exhaust: electric blue, hot cyan at the nozzles
+    // the ship's thrusters and their exhaust: deep electric blue, brightest at the nozzles
+    // (the ASCII pass also gives these a wide glow)
     name: 'plasma',
     bands: [' ', '.', '.:', ':+', '+*', '*#', '#@', '@#'],
-    dark: '#2a62ff', bright: '#8fe6ff',
+    dark: '#1f4bff', bright: '#74b9ff',
     jitter: 0.8, scramble: 1.2, gamma: 0.6, grain: 0.2,
   },
   {
